@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Textro PdfCraft - PDF Editor & Converter</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        50: '#eff6ff',
+                        500: '#3b82f6',
+                        600: '#2563eb',
+                        700: '#1d4ed8',
+                    },
+                    dark: {
+                        900: '#0f0f23',
+                        800: '#1a1a2e',
+                        700: '#16213e',
+                    }
+                },
+                animation: {
+                    'fade-in': 'fadeIn 0.5s ease-in-out',
+                    'slide-up': 'slideUp 0.3s ease-out',
+                    'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    'rotate': 'rotate 8s linear infinite',
+                    'flicker': 'flicker 2s linear infinite',
+                    'iconflicker': 'iconflicker 2s linear infinite',
+                    'float': 'float 6s ease-in-out infinite',
+                },
+                keyframes: {
+                    fadeIn: {
+                        '0%': { opacity: '0' },
+                        '100%': { opacity: '1' }
+                    },
+                    slideUp: {
+                        '0%': { transform: 'translateY(10px)', opacity: '0' },
+                        '100%': { transform: 'translateY(0)', opacity: '1' }
+                    },
+                    rotate: {
+                        'to': { transform: 'rotate(360deg)' }
+                    },
+                    flicker: {
+                        '0%': {
+                            borderColor: 'rgb(1, 235, 252)',
+                            boxShadow: '0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255)'
+                        },
+                        '5%': {
+                            borderColor: 'transparent',
+                            boxShadow: 'none'
+                        },
+                        '10%': {
+                            borderColor: 'rgb(1, 235, 252)',
+                            boxShadow: '0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255)'
+                        },
+                        '25%': {
+                            borderColor: 'transparent',
+                            boxShadow: 'none'
+                        },
+                        '30%': {
+                            borderColor: 'rgb(1, 235, 252)',
+                            boxShadow: '0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255)'
+                        },
+                        '100%': {
+                            borderColor: 'rgb(1, 235, 252)',
+                            boxShadow: '0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255)'
+                        }
+                    },
+                    iconflicker: {
+                        '0%': { opacity: '1' },
+                        '5%': { opacity: '0.2' },
+                        '10%': { opacity: '1' },
+                        '25%': { opacity: '0.2' },
+                        '30%': { opacity: '1' },
+                        '100%': { opacity: '1' }
+                    },
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0)' },
+                        '50%': { transform: 'translateY(-10px)' }
+                    }
+                }
+            }
+        }
+    }
+  </script>
+
+  <style>
+    body {
+        background: #0f0f23;
+        background-image:
+            radial-gradient(at 88% 40%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 49% 30%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 14% 26%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 0% 64%, hsla(263, 93%, 56%, 1) 0px, transparent 85%),
+            radial-gradient(at 41% 94%, hsla(284, 100%, 84%, 1) 0px, transparent 85%),
+            radial-gradient(at 100% 99%, hsla(306, 100%, 57%, 1) 0px, transparent 85%);
+    }
+
+    .main-card {
+        position: relative;
+        background-color: hsla(240, 15%, 9%, 1);
+        background-image:
+            radial-gradient(at 88% 40%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 49% 30%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 14% 26%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 0% 64%, hsla(263, 93%, 56%, 1) 0px, transparent 85%),
+            radial-gradient(at 41% 94%, hsla(284, 100%, 84%, 1) 0px, transparent 85%),
+            radial-gradient(at 100% 99%, hsla(306, 100%, 57%, 1) 0px, transparent 85%);
+        box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.25) inset;
+    }
+
+    .card-border {
+        overflow: hidden;
+        pointer-events: none;
+        position: absolute;
+        z-index: -10;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        background-image: linear-gradient(0deg, hsl(0, 0%, 100%) -50%, hsl(0, 0%, 40%) 100%);
+        border-radius: 1rem;
+    }
+
+    .card-border::before {
+        content: "";
+        pointer-events: none;
+        position: fixed;
+        z-index: 200;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%), rotate(0deg);
+        transform-origin: left;
+        width: 200%;
+        height: 10rem;
+        background-image: linear-gradient(
+            0deg,
+            hsla(0, 0%, 100%, 0) 0%,
+            hsl(277, 95%, 60%) 40%,
+            hsl(277, 95%, 60%) 60%,
+            hsla(0, 0%, 40%, 0) 100%
+        );
+        animation: rotate 8s linear infinite;
+    }
+
+    .feature-card {
+        background-color: rgba(240, 15%, 9%, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(147, 51, 234, 0.3);
+        border-color: rgba(147, 51, 234, 0.5);
+    }
+
+    .upload-button {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid rgb(1, 235, 252);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        box-shadow: 0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255);
+        animation: flicker 2s linear infinite;
+        cursor: pointer;
+    }
+
+    .upload-icon {
+        color: rgb(1, 235, 252);
+        font-size: 2rem;
+        animation: iconflicker 2s linear infinite;
+    }
+
+    .upload-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .gradient-button {
+        background-image: linear-gradient(0deg, rgba(94, 58, 238, 1) 0%, rgba(197, 107, 240, 1) 100%);
+        box-shadow: inset 0 -2px 25px -4px rgba(255, 255, 255, 0.3);
+    }
+
+    .check-icon {
+        background-color: hsl(266, 92%, 58%);
+    }
+
+    .glass-effect {
+        background: rgba(15, 15, 35, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-glass {
+        background: rgba(15, 15, 35, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Cyber card styles */
+    .cyber-card {
+        position: relative;
+        width: 190px;
+        height: 254px;
+        transition: 200ms;
+        perspective: 800px;
+    }
+
+    .cyber-card-inner {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        transition: 700ms;
+        background: linear-gradient(45deg, #1a1a1a, #262626);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .cyber-card-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .cyber-card-title {
+        opacity: 0;
+        transition: 300ms ease-in-out;
+        position: absolute;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 4px;
+        text-align: center;
+        width: 100%;
+        padding-top: 20px;
+        background: linear-gradient(45deg, #00ffaa, #00a2ff);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 15px rgba(0, 255, 170, 0.3));
+        text-shadow: 0 0 10px rgba(92, 103, 255, 0.5), 0 0 20px rgba(92, 103, 255, 0.3);
+    }
+
+    .cyber-card-subtitle {
+        position: absolute;
+        bottom: 40px;
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        letter-spacing: 2px;
+        transform: translateY(30px);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .cyber-card-highlight {
+        color: #00ffaa;
+        margin-left: 5px;
+        background: linear-gradient(90deg, #5c67ff, #ad51ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+
+    .cyber-card:hover .cyber-card-title {
+        opacity: 1;
+        transform: translateY(-10px);
+    }
+
+    .cyber-card:hover .cyber-card-inner {
+        transition: 300ms;
+        filter: brightness(1.1);
+    }
+
+    /* Cyber lines animation */
+    .cyber-lines span {
+        position: absolute;
+        background: linear-gradient(90deg, transparent, rgba(92, 103, 255, 0.2), transparent);
+    }
+
+    .cyber-lines span:nth-child(1) {
+        top: 20%;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        transform: scaleX(0);
+        transform-origin: left;
+        animation: lineGrow 3s linear infinite;
+    }
+
+    .cyber-lines span:nth-child(2) {
+        top: 40%;
+        right: 0;
+        width: 100%;
+        height: 1px;
+        transform: scaleX(0);
+        transform-origin: right;
+        animation: lineGrow 3s linear infinite 1s;
+    }
+
+    .cyber-lines span:nth-child(3) {
+        top: 60%;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        transform: scaleX(0);
+        transform-origin: left;
+        animation: lineGrow 3s linear infinite 2s;
+    }
+
+    .cyber-lines span:nth-child(4) {
+        top: 80%;
+        right: 0;
+        width: 100%;
+        height: 1px;
+        transform: scaleX(0);
+        transform-origin: right;
+        animation: lineGrow 3s linear infinite 1.5s;
+    }
+
+    .input-div {
+position: relative;
+width: 120px;
+height: 120px;
+border-radius: 50%;
+border: 2px solid rgb(1, 235, 252);
+display: flex;
+justify-content: center;
+align-items: center;
+overflow: hidden;
+box-shadow: 0px 0px 100px rgb(1, 235, 252), inset 0px 0px 10px rgb(1, 235, 252), 0px 0px 5px rgb(255, 255, 255);
+animation: flicker 2s linear infinite;
+cursor: pointer;
+}
+
+.icon {
+color: rgb(1, 235, 252);
+width: 2.5rem;
+height: 2.5rem;
+cursor: pointer;
+animation: iconflicker 2s linear infinite;
+}
+
+.input {
+position: absolute;
+opacity: 0;
+width: 100%;
+height: 100%;
+cursor: pointer !important;
+}
+
+    @keyframes lineGrow {
+        0% { transform: scaleX(0); opacity: 0; }
+        50% { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(0); opacity: 0; }
+    }
+
+    .animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.text-blue-400 {
+    color: #60a5fa;
+}
+
+.text-green-400 {
+    color: #34d399;
+}
+
+.text-red-400 {
+    color: #f87171;
+}
+
+.bg-dark-700 {
+    background-color: rgba(26, 32, 44, 0.7);
+}
+  </style>
+</head>
+
+<body class="min-h-screen text-white">
+<!-- Navigation -->
+<nav class="navbar-glass fixed top-0 w-full z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo -->
+      <div class="flex items-center">
+        <a href="/" class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-file-pdf text-white text-lg"></i>
+          </div>
+          <span class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            Textro PdfCraft
+                        </span>
+        </a>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="/" class="text-gray-300 hover:text-purple-400 transition-colors duration-200">
+          <i class="fas fa-home mr-2"></i>Home
+        </a>
+        <a href="/editor" class="text-gray-300 hover:text-purple-400 transition-colors duration-200">
+          <i class="fas fa-edit mr-2"></i>Editor
+        </a>
+        <a href="#features" class="text-gray-300 hover:text-purple-400 transition-colors duration-200">
+          <i class="fas fa-tools mr-2"></i>Features
+        </a>
+      </div>
+
+      <!-- Theme Toggle & Mobile Menu -->
+      <div class="flex items-center space-x-4">
+        <button id="themeToggle" class="p-2 rounded-lg glass-effect hover:bg-white/10 transition-colors">
+          <i id="themeIcon" class="fas fa-moon text-gray-300"></i>
+        </button>
+        <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg glass-effect">
+          <i class="fas fa-bars text-gray-300"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Navigation -->
+<div id="mobileMenu" class="md:hidden hidden bg-gray-800 border-t border-white/10">
+  <div class="px-4 py-2 space-y-2">
+    <a href="/" class="block px-3 py-2 text-gray-300 hover:bg-white/10 rounded-lg">
+      <i class="fas fa-home mr-2"></i>Home
+    </a>
+    <a href="/editor" class="block px-3 py-2 text-gray-300 hover:bg-white/10 rounded-lg">
+      <i class="fas fa-edit mr-2"></i>Editor
+    </a>
+    <a href="#features" class="block px-3 py-2 text-gray-300 hover:bg-white/10 rounded-lg">
+      <i class="fas fa-tools mr-2"></i>Features
+    </a>
+  </div>
+</div>
+
+<!-- Main Content -->
+<main class="pt-20">
+  <!-- Hero Section -->
+  <div class="container mx-auto px-4 py-16">
+    <div class="text-center mb-16">
+      <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+        PDF Editor & Converter
+      </h1>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+        Experience the future of PDF editing with our revolutionary on-device processing technology.
+        Your privacy is guaranteed - no cloud uploads, no data collection.
+      </p>
+    </div>
+
+    <!-- Upload Section with Glowing Button -->
+    <div class="flex justify-center mb-20">
+      <div class="main-card rounded-2xl p-8 max-w-2xl w-full">
+        <div class="card-border"></div>
+        <div class="text-center">
+          <h3 class="text-2xl font-bold text-white mb-4">Upload Your Files</h3>
+          <p class="text-gray-400 mb-8">Drag & drop files or click to browse</p>
+
+          <div class="flex justify-center mb-6">
+            <div class="input-div">
+              <input class="input" name="file" type="file" multiple accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" stroke-linejoin="round" stroke-linecap="round" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor" class="icon">
+                <polyline points="16 16 12 12 8 16"></polyline>
+                <line y2="21" x2="12" y1="12" x1="12"></line>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                <polyline points="16 16 12 12 8 16"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <div class="text-sm text-gray-400">
+            Supported formats: PDF, Word (.docx), PowerPoint (.pptx), Excel (.xlsx), Images (.png, .jpg)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions Cards -->
+    <!-- Quick Actions Cards -->
+    <div class="mb-20">
+      <h2 class="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        Quick Actions
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Edit PDF Card (Cyber Style) -->
+        <div class="cyber-card group">
+          <div class="cyber-card-inner">
+            <div class="cyber-card-content">
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 font-semibold text-gray-400 group-hover:opacity-0 transition-opacity">
+                <i class="fas fa-edit mr-2"></i>HOVER ME
+              </p>
+              <div class="cyber-card-title">
+                <i class="fas fa-edit mb-2"></i><br />EDIT<br />PDF
+              </div>
+              <div class="cyber-card-subtitle">
+                <span>Add text, annotations, signatures</span>
+                <span class="cyber-card-highlight">Start Editing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Convert Files Card (Cyber Style) -->
+        <div class="cyber-card group">
+          <div class="cyber-card-inner">
+            <div class="cyber-card-content">
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 font-semibold text-gray-400 group-hover:opacity-0 transition-opacity">
+                <i class="fas fa-exchange-alt mr-2"></i>HOVER ME
+              </p>
+              <div class="cyber-card-title">
+                <i class="fas fa-exchange-alt mb-2"></i><br />CONVERT<br />FILES
+              </div>
+              <div class="cyber-card-subtitle">
+                <span>PDF, Word, Excel, PowerPoint</span>
+                <span class="cyber-card-highlight">Convert Now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Merge PDFs Card (Cyber Style) -->
+        <div class="cyber-card group">
+          <div class="cyber-card-inner">
+            <div class="cyber-card-content">
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 font-semibold text-gray-400 group-hover:opacity-0 transition-opacity">
+                <i class="fas fa-object-group mr-2"></i>HOVER ME
+              </p>
+              <div class="cyber-card-title">
+                <i class="fas fa-object-group mb-2"></i><br />MERGE<br />PDFs
+              </div>
+              <div class="cyber-card-subtitle">
+                <span>Combine multiple PDF files</span>
+                <span class="cyber-card-highlight">Merge Files</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split PDF Card (Cyber Style) -->
+        <div class="cyber-card group">
+          <div class="cyber-card-inner">
+            <div class="cyber-card-content">
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 font-semibold text-gray-400 group-hover:opacity-0 transition-opacity">
+                <i class="fas fa-cut mr-2"></i>HOVER ME
+              </p>
+              <div class="cyber-card-title">
+                <i class="fas fa-cut mb-2"></i><br />SPLIT<br />PDF
+              </div>
+              <div class="cyber-card-subtitle">
+                <span>Extract specific pages</span>
+                <span class="cyber-card-highlight">Split PDF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Features Section -->
+    <div class="mb-20">
+      <h2 class="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        Why Choose PdfCraft?
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mb-6">
+            <i class="fas fa-shield-alt text-white text-3xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">100% Privacy</h3>
+          <p class="text-gray-400">All processing happens on your device. No cloud uploads or data collection. Your documents never leave your computer.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6">
+            <i class="fas fa-bolt text-white text-3xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Lightning Fast</h3>
+          <p class="text-gray-400">Optimized algorithms ensure quick document processing and editing without compromising quality.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center mb-6">
+            <i class="fas fa-mobile-alt text-white text-3xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Mobile Friendly</h3>
+          <p class="text-gray-400">Responsive design that works perfectly on all devices and screen sizes. Edit on the go!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Files Section -->
+    <div class="main-card rounded-2xl p-8">
+      <div class="card-border"></div>
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-white">Recent Files</h3>
+        <button class="glass-effect px-6 py-2 rounded-full text-purple-400 hover:text-purple-300 transition-colors">
+          <i class="fas fa-folder mr-2"></i>File Manager
+        </button>
+      </div>
+      <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-file-pdf text-6xl mb-4 opacity-50"></i>
+        <p class="text-lg">No recent files. Upload a document to get started!</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="navbar-glass border-t border-white/10 mt-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h3 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+          Textro PdfCraft
+        </h3>
+        <p class="text-gray-400">
+          Professional PDF editing and conversion tool with privacy-first approach and cutting-edge technology.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-white mb-4">Features</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li><i class="fas fa-check text-purple-400 mr-2"></i>PDF Editing</li>
+          <li><i class="fas fa-check text-purple-400 mr-2"></i>Format Conversion</li>
+          <li><i class="fas fa-check text-purple-400 mr-2"></i>Merge & Split</li>
+          <li><i class="fas fa-check text-purple-400 mr-2"></i>On-Device Processing</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-white mb-4">Security</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li><i class="fas fa-shield-alt text-cyan-400 mr-2"></i>100% Private</li>
+          <li><i class="fas fa-shield-alt text-cyan-400 mr-2"></i>No Cloud Upload</li>
+          <li><i class="fas fa-shield-alt text-cyan-400 mr-2"></i>Local Processing</li>
+          <li><i class="fas fa-shield-alt text-cyan-400 mr-2"></i>Secure Encryption</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 mt-8 pt-8 text-center">
+      <p class="text-gray-400">
+        © 2025 Textro PdfCraft. All rights reserved. Built with love and cutting-edge technology.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- Floating Action Button (Mobile) -->
+<div class="fixed bottom-6 right-6 md:hidden">
+  <button class="upload-button">
+    <input type="file" class="upload-input" multiple accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg">
+    <i class="fas fa-plus upload-icon"></i>
+  </button>
+</div>
+
+<script>
+  // Theme toggle functionality
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+  const html = document.documentElement;
+
+  // Check for saved theme preference or default to 'dark'
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+
+  if (currentTheme === 'dark') {
+      html.classList.add('dark');
+      themeIcon.className = 'fas fa-sun text-gray-300';
+  }
+
+  themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+
+      if (html.classList.contains('dark')) {
+          themeIcon.className = 'fas fa-sun text-gray-300';
+          localStorage.setItem('theme', 'dark');
+      } else {
+          themeIcon.className = 'fas fa-moon text-gray-700';
+          localStorage.setItem('theme', 'light');
+      }
+  });
+
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobileMenuButton');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+  });
+
+  // File upload handling with enhanced UI feedback
+  document.addEventListener('DOMContentLoaded', function() {
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const uploadButton = document.querySelector('.input-div');
+      const uploadInput = document.querySelector('.input');
+      const dropZone = document.querySelector('.main-card');
+      const statusText = document.createElement('p');
+      statusText.className = 'text-sm mt-4 text-center';
+      dropZone.appendChild(statusText);
+
+      // Handle file upload button click
+      uploadButton.addEventListener('click', function(e) {
+          if (!e.target.classList.contains('input')) {
+              uploadInput.click();
+          }
+      });
+
+      // Handle file selection
+      uploadInput.addEventListener('change', function(e) {
+          handleFiles(e.target.files);
+      });
+
+      // Drag and drop functionality
+      dropZone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          this.classList.add('border-purple-400', 'bg-dark-700');
+          statusText.textContent = 'Drop your PDF file here';
+          statusText.className = 'text-sm mt-4 text-center text-purple-400';
+      });
+
+      dropZone.addEventListener('dragleave', function(e) {
+          e.preventDefault();
+          this.classList.remove('border-purple-400', 'bg-dark-700');
+          statusText.textContent = '';
+      });
+
+      dropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          this.classList.remove('border-purple-400', 'bg-dark-700');
+          handleFiles(e.dataTransfer.files);
+      });
+
+      // File handling function
+      function handleFiles(files) {
+          if (!files || files.length === 0) {
+              statusText.textContent = 'No files selected';
+              statusText.className = 'text-sm mt-4 text-center text-red-400';
+              return;
+          }
+
+          const file = files[0];
+          
+          // Check file type
+          if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+              statusText.textContent = 'Please upload a PDF file';
+              statusText.className = 'text-sm mt-4 text-center text-red-400';
+              return;
+          }
+
+          // Check file size
+          if (file.size > MAX_FILE_SIZE) {
+              statusText.textContent = 'File too large (max 10MB)';
+              statusText.className = 'text-sm mt-4 text-center text-red-400';
+              return;
+          }
+
+          // Show loading state
+          statusText.textContent = 'Processing PDF...';
+          statusText.className = 'text-sm mt-4 text-center text-blue-400';
+          uploadButton.querySelector('.icon').classList.add('animate-spin');
+
+          // Read the file
+          const reader = new FileReader();
+          
+          reader.onloadstart = function() {
+              uploadButton.style.opacity = '0.7';
+          };
+
+          reader.onload = function(event) {
+              try {
+                  localStorage.setItem('currentPdf', event.target.result);
+                  localStorage.setItem('originalFileName', file.name);
+                  
+                  // Show success message briefly before redirect
+                  statusText.textContent = 'PDF loaded successfully! Redirecting...';
+                  statusText.className = 'text-sm mt-4 text-center text-green-400';
+                  
+                  setTimeout(() => {
+                      window.location.href = 'editor.html';
+                  }, 1000);
+              } catch (e) {
+                  console.error('Error storing PDF:', e);
+                  statusText.textContent = 'Error processing PDF';
+                  statusText.className = 'text-sm mt-4 text-center text-red-400';
+              } finally {
+                  uploadButton.style.opacity = '1';
+                  uploadButton.querySelector('.icon').classList.remove('animate-spin');
+              }
+          };
+
+          reader.onerror = function() {
+              statusText.textContent = 'Error reading file';
+              statusText.className = 'text-sm mt-4 text-center text-red-400';
+              uploadButton.style.opacity = '1';
+              uploadButton.querySelector('.icon').classList.remove('animate-spin');
+          };
+
+          reader.readAsDataURL(file);
+      }
+
+      // Add animation to upload button on hover
+      uploadButton.addEventListener('mouseenter', function() {
+          this.style.transform = 'scale(1.05)';
+          this.style.transition = 'transform 0.3s ease';
+      });
+
+      uploadButton.addEventListener('mouseleave', function() {
+          this.style.transform = 'scale(1)';
+      });
+
+      // Close mobile menu when clicking a link
+      document.querySelectorAll('#mobileMenu a').forEach(link => {
+          link.addEventListener('click', () => {
+              mobileMenu.classList.add('hidden');
+          });
+      });
+  });
+
+  // Add animation to cyber cards
+  document.querySelectorAll('.cyber-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-5px)';
+          this.style.transition = 'transform 0.3s ease';
+      });
+
+      card.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0)';
+      });
+  });
+</script>
+<!-- <script>
+  // Theme toggle functionality
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+  const html = document.documentElement;
+
+  // Check for saved theme preference or default to 'dark'
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+
+  if (currentTheme === 'dark') {
+      html.classList.add('dark');
+      themeIcon.className = 'fas fa-sun text-gray-300';
+  }
+
+  themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+
+      if (html.classList.contains('dark')) {
+          themeIcon.className = 'fas fa-sun text-gray-300';
+          localStorage.setItem('theme', 'dark');
+      } else {
+          themeIcon.className = 'fas fa-moon text-gray-700';
+          localStorage.setItem('theme', 'light');
+      }
+  });
+
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobileMenuButton');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+  });
+
+  // Handle file upload from the upload button
+document.querySelectorAll('.input-div').forEach(div => {
+    div.addEventListener('click', function(e) {
+        if (e.target.classList.contains('input')) return;
+        this.querySelector('input').click();
+    });
+});
+
+// Handle file selection
+document.querySelectorAll('.input').forEach(input => {
+    input.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            // Check if it's a PDF
+            if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
+                // Store the file in localStorage temporarily
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    localStorage.setItem('currentPdf', event.target.result);
+                    // Redirect to editor
+                    window.location.href = 'editor.html';
+                };
+                reader.readAsDataURL(files[0]);
+            } else {
+                alert('Please upload a PDF file');
+            }
+        }
+    });
+});
+
+// Add drag and drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadAreas = document.querySelectorAll('.main-card');
+
+    uploadAreas.forEach(area => {
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('border-purple-400');
+        });
+
+        area.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('border-purple-400');
+        });
+
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('border-purple-400');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                // Check if it's a PDF
+                if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
+                    // Store the file in localStorage temporarily
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        localStorage.setItem('currentPdf', event.target.result);
+                        // Redirect to editor
+                        window.location.href = 'editor.html';
+                    };
+                    reader.readAsDataURL(files[0]);
+                } else {
+                    alert('Please upload a PDF file');
+                }
+            }
+        });
+    });
+});
+
+  // // File upload handling
+  // const fileInputs = document.querySelectorAll('.upload-input');
+
+  // fileInputs.forEach(input => {
+  //     input.addEventListener('change', function(e) {
+  //         const files = e.target.files;
+  //         if (files.length > 0) {
+  //             console.log('Files selected:', files);
+  //             // Add your file processing logic here
+  //             alert(`${files.length} file(s) selected for processing!`);
+  //         }
+  //     });
+  // });
+
+  // // Add drag and drop functionality
+  // document.addEventListener('DOMContentLoaded', function() {
+  //     const uploadAreas = document.querySelectorAll('.main-card');
+
+  //     uploadAreas.forEach(area => {
+  //         area.addEventListener('dragover', function(e) {
+  //             e.preventDefault();
+  //             this.classList.add('border-purple-400');
+  //         });
+
+  //         area.addEventListener('dragleave', function(e) {
+  //             e.preventDefault();
+  //             this.classList.remove('border-purple-400');
+  //         });
+
+  //         area.addEventListener('drop', function(e) {
+  //             e.preventDefault();
+  //             this.classList.remove('border-purple-400');
+  //             const files = e.dataTransfer.files;
+  //             if (files.length > 0) {
+  //                 console.log('Files dropped:', files);
+  //                 alert(`${files.length} file(s) dropped for processing!`);
+  //             }
+  //         });
+  //     });
+  // });
+</script> -->
+</body>
+</html>
+
+
+
+
+
+<!--&lt;!&ndash;index.html&ndash;&gt;-->
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--  <title>Textro PdfCraft - PDF Editor & Converter</title>-->
+
+<!--  &lt;!&ndash; Bootstrap 5 CSS &ndash;&gt;-->
+<!--  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">-->
+<!--  &lt;!&ndash; Bootstrap Icons &ndash;&gt;-->
+<!--  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">-->
+<!--  &lt;!&ndash; Custom CSS &ndash;&gt;-->
+<!--  <link rel="stylesheet" th:href="@{/css/style.css}">-->
+<!--</head>-->
+<!--<body data-bs-theme="light">-->
+<!--&lt;!&ndash; Navigation &ndash;&gt;-->
+<!--<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">-->
+<!--  <div class="container-fluid">-->
+<!--    <a class="navbar-brand fw-bold" href="/">-->
+<!--      <i class="bi bi-file-pdf me-2"></i>Textro PdfCraft-->
+<!--    </a>-->
+
+<!--    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">-->
+<!--      <span class="navbar-toggler-icon"></span>-->
+<!--    </button>-->
+
+<!--    <div class="collapse navbar-collapse" id="navbarNav">-->
+<!--      <ul class="navbar-nav me-auto">-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link active" href="/">Home</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link" href="/editor">Editor</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link" href="/converter">Converter</a>-->
+<!--        </li>-->
+<!--      </ul>-->
+
+<!--      <div class="d-flex align-items-center">-->
+<!--        <button id="themeToggle" class="btn btn-outline-light me-2" title="Toggle theme">-->
+<!--          <i class="bi bi-moon-fill" id="themeIcon"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown">-->
+<!--          <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">-->
+<!--            <i class="bi bi-gear"></i>-->
+<!--          </button>-->
+<!--          <ul class="dropdown-menu dropdown-menu-end">-->
+<!--            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>-->
+<!--            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>-->
+<!--            <li><hr class="dropdown-divider"></li>-->
+<!--            <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>-->
+<!--          </ul>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</nav>-->
+
+<!--&lt;!&ndash; Main Content &ndash;&gt;-->
+<!--<main class="container-fluid mt-5 pt-4">-->
+<!--  &lt;!&ndash; Hero Section &ndash;&gt;-->
+<!--  <div class="row justify-content-center mb-5">-->
+<!--    <div class="col-lg-8 text-center">-->
+<!--      <h1 class="display-4 fw-bold text-primary mb-3">-->
+<!--        <i class="bi bi-file-pdf me-3"></i>PDF Editor & Converter-->
+<!--      </h1>-->
+<!--      <p class="lead text-muted mb-4">-->
+<!--        Edit, convert, and manage your PDF documents with powerful on-device processing.-->
+<!--        No cloud uploads - your privacy is guaranteed.-->
+<!--      </p>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Upload Section &ndash;&gt;-->
+<!--  <div class="row justify-content-center mb-5">-->
+<!--    <div class="col-lg-8">-->
+<!--      <div class="card shadow-lg border-0">-->
+<!--        <div class="card-body p-5">-->
+<!--          <div id="dropZone" class="upload-zone text-center p-5 border border-2 border-dashed rounded-3 position-relative">-->
+<!--            <div class="upload-content">-->
+<!--              <i class="bi bi-cloud-upload display-1 text-primary mb-3"></i>-->
+<!--              <h4 class="mb-3">Drag & Drop Files Here</h4>-->
+<!--              <p class="text-muted mb-4">or click to browse files</p>-->
+
+<!--              <input type="file" id="fileInput" multiple-->
+<!--                     accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg"-->
+<!--                     class="d-none">-->
+
+<!--              <button type="button" class="btn btn-primary btn-lg px-4" onclick="document.getElementById('fileInput').click()">-->
+<!--                <i class="bi bi-folder-open me-2"></i>Browse Files-->
+<!--              </button>-->
+
+<!--              <div class="mt-4">-->
+<!--                <small class="text-muted">-->
+<!--                  Supported formats: PDF, Word (.docx), PowerPoint (.pptx), Excel (.xlsx), Images (.png, .jpg)-->
+<!--                </small>-->
+<!--              </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Progress Bar (hidden by default) &ndash;&gt;-->
+<!--            <div id="uploadProgress" class="progress mt-3 d-none">-->
+<!--              <div class="progress-bar progress-bar-striped progress-bar-animated"-->
+<!--                   role="progressbar" style="width: 0%"></div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Quick Actions &ndash;&gt;-->
+<!--  <div class="row justify-content-center mb-5">-->
+<!--    <div class="col-lg-10">-->
+<!--      <h3 class="text-center mb-4">Quick Actions</h3>-->
+<!--      <div class="row g-4">-->
+<!--        <div class="col-md-6 col-lg-3">-->
+<!--          <div class="card h-100 text-center border-0 shadow-sm hover-card">-->
+<!--            <div class="card-body">-->
+<!--              <i class="bi bi-pencil-square display-4 text-success mb-3"></i>-->
+<!--              <h5 class="card-title">Edit PDF</h5>-->
+<!--              <p class="card-text text-muted">Add text, annotations, signatures and more</p>-->
+<!--              <button class="btn btn-success">Start Editing</button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="col-md-6 col-lg-3">-->
+<!--          <div class="card h-100 text-center border-0 shadow-sm hover-card">-->
+<!--            <div class="card-body">-->
+<!--              <i class="bi bi-arrow-repeat display-4 text-info mb-3"></i>-->
+<!--              <h5 class="card-title">Convert Files</h5>-->
+<!--              <p class="card-text text-muted">Convert between PDF, Word, Excel, PowerPoint</p>-->
+<!--              <button class="btn btn-info">Convert Now</button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="col-md-6 col-lg-3">-->
+<!--          <div class="card h-100 text-center border-0 shadow-sm hover-card">-->
+<!--            <div class="card-body">-->
+<!--              <i class="bi bi-union display-4 text-warning mb-3"></i>-->
+<!--              <h5 class="card-title">Merge PDFs</h5>-->
+<!--              <p class="card-text text-muted">Combine multiple PDF files into one</p>-->
+<!--              <button class="btn btn-warning">Merge Files</button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="col-md-6 col-lg-3">-->
+<!--          <div class="card h-100 text-center border-0 shadow-sm hover-card">-->
+<!--            <div class="card-body">-->
+<!--              <i class="bi bi-scissors display-4 text-danger mb-3"></i>-->
+<!--              <h5 class="card-title">Split PDF</h5>-->
+<!--              <p class="card-text text-muted">Extract specific pages or split document</p>-->
+<!--              <button class="btn btn-danger">Split PDF</button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Recent Files &ndash;&gt;-->
+<!--  <div class="row justify-content-center mb-5">-->
+<!--    <div class="col-lg-10">-->
+<!--      <div class="d-flex justify-content-between align-items-center mb-4">-->
+<!--        <h3>Recent Files</h3>-->
+<!--        <button class="btn btn-outline-primary">-->
+<!--          <i class="bi bi-folder me-2"></i>File Manager-->
+<!--        </button>-->
+<!--      </div>-->
+
+<!--      <div class="card border-0 shadow-sm">-->
+<!--        <div class="card-body">-->
+<!--          <div id="recentFiles" class="row g-3">-->
+<!--            &lt;!&ndash; Recent files will be loaded here &ndash;&gt;-->
+<!--            <div class="col-12 text-center py-5 text-muted">-->
+<!--              <i class="bi bi-file-earmark display-4 mb-3"></i>-->
+<!--              <p>No recent files. Upload a document to get started!</p>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Features Section &ndash;&gt;-->
+<!--  <div class="row justify-content-center mb-5">-->
+<!--    <div class="col-lg-10">-->
+<!--      <h3 class="text-center mb-5">Powerful Features</h3>-->
+<!--      <div class="row g-4">-->
+<!--        <div class="col-md-4">-->
+<!--          <div class="feature-item text-center">-->
+<!--            <i class="bi bi-shield-check display-4 text-success mb-3"></i>-->
+<!--            <h5>100% Privacy</h5>-->
+<!--            <p class="text-muted">All processing happens on your device. No cloud uploads or data collection.</p>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="col-md-4">-->
+<!--          <div class="feature-item text-center">-->
+<!--            <i class="bi bi-lightning-charge display-4 text-warning mb-3"></i>-->
+<!--            <h5>Fast Processing</h5>-->
+<!--            <p class="text-muted">Optimized algorithms for quick document processing and editing.</p>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="col-md-4">-->
+<!--          <div class="feature-item text-center">-->
+<!--            <i class="bi bi-phone display-4 text-info mb-3"></i>-->
+<!--            <h5>Mobile Friendly</h5>-->
+<!--            <p class="text-muted">Responsive design that works perfectly on all devices and screen sizes.</p>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</main>-->
+
+<!--&lt;!&ndash; Footer &ndash;&gt;-->
+<!--<footer class="bg-dark text-light py-4 mt-5">-->
+<!--  <div class="container">-->
+<!--    <div class="row">-->
+<!--      <div class="col-md-6">-->
+<!--        <h5>Textro PdfCraft</h5>-->
+<!--        <p class="text-muted">Professional PDF editing and conversion tool with privacy-first approach.</p>-->
+<!--      </div>-->
+<!--      <div class="col-md-6 text-md-end">-->
+<!--        <p class="text-muted mb-0">&copy; 2025 Textro PdfCraft. All rights reserved.</p>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</footer>-->
+
+<!--&lt;!&ndash; FAB for Mobile &ndash;&gt;-->
+<!--<div class="fab d-lg-none">-->
+<!--  <button class="btn btn-primary rounded-circle fab-button" data-bs-toggle="modal" data-bs-target="#quickActionsModal">-->
+<!--    <i class="bi bi-plus-lg"></i>-->
+<!--  </button>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; Quick Actions Modal for Mobile &ndash;&gt;-->
+<!--<div class="modal fade" id="quickActionsModal" tabindex="-1">-->
+<!--  <div class="modal-dialog modal-dialog-centered">-->
+<!--    <div class="modal-content">-->
+<!--      <div class="modal-header">-->
+<!--        <h5 class="modal-title">Quick Actions</h5>-->
+<!--        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>-->
+<!--      </div>-->
+<!--      <div class="modal-body">-->
+<!--        <div class="d-grid gap-2">-->
+<!--          <button class="btn btn-outline-primary">-->
+<!--            <i class="bi bi-plus-circle me-2"></i>Add Text-->
+<!--          </button>-->
+<!--          <button class="btn btn-outline-primary">-->
+<!--            <i class="bi bi-brush me-2"></i>Draw-->
+<!--          </button>-->
+<!--          <button class="btn btn-outline-primary">-->
+<!--            <i class="bi bi-pen me-2"></i>Signature-->
+<!--          </button>-->
+<!--          <button class="btn btn-outline-primary">-->
+<!--            <i class="bi bi-highlighter me-2"></i>Highlight-->
+<!--          </button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; Bootstrap JS &ndash;&gt;-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>-->
+<!--&lt;!&ndash; Custom JS &ndash;&gt;-->
+<!--<script th:src="@{/js/main.js}"></script>-->
+<!--</body>-->
+<!--</html>-->
