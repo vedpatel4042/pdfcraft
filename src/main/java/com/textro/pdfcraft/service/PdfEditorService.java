@@ -3,8 +3,11 @@ package com.textro.pdfcraft.service;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,23 +34,17 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.kernel.pdf.EncryptionConstants;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.WriterProperties;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.VerticalAlignment;
+import com.textro.pdfcraft.model.PdfEditRequest;
+import com.textro.pdfcraft.model.PdfPageState;
 
 @Service
-public class PdfService {
+public class PdfEditorService {
 
     // Session storage
     private final Map<String, PDDocument> documentSessions = new ConcurrentHashMap<>();
     private final Map<String, String> sessionFileNames = new ConcurrentHashMap<>();
     private final Map<String, Map<String, TextAnnotation>> textAnnotations = new ConcurrentHashMap<>();
+    private final Map<String, Map<Integer, PdfPageState>> pageStates = new ConcurrentHashMap<>();
     private final Map<String, Integer> currentPageMap = new ConcurrentHashMap<>();
     private final Map<String, Float> zoomLevelMap = new ConcurrentHashMap<>();
     private final Map<String, List<ExistingTextElement>> existingTextElements = new ConcurrentHashMap<>();
@@ -106,16 +103,45 @@ public class PdfService {
     /* ===================== */
  /* == Session Methods == */
  /* ===================== */
-    public String storePdfInSession(MultipartFile file) throws IOException {
+    public String processUpload(MultipartFile file) throws IOException {
         String sessionId = UUID.randomUUID().toString();
-        PDDocument document = Loader.loadPDF(file.getBytes());
+
+        PDDocument document;
+        if (file != null && file.getSize() > 0) {
+            document = Loader.loadPDF(file.getBytes());
+            sessionFileNames.put(sessionId, file.getOriginalFilename());
+        } else {
+            // Create new blank document
+            document = new PDDocument();
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            sessionFileNames.put(sessionId, "new_document.pdf");
+        }
+
         documentSessions.put(sessionId, document);
-        sessionFileNames.put(sessionId, file.getOriginalFilename());
         textAnnotations.put(sessionId, new ConcurrentHashMap<>());
         currentPageMap.put(sessionId, 1);
         zoomLevelMap.put(sessionId, 1.0f);
+
+        // Initialize page states
+        Map<Integer, PdfPageState> states = new HashMap<>();
+        for (int i = 1; i <= document.getNumberOfPages(); i++) {
+            states.put(i, new PdfPageState(i));
+        }
+        pageStates.put(sessionId, states);
+
+        // Extract existing text elements
         extractExistingTextElements(sessionId, document);
+
         return sessionId;
+    }
+
+    public PdfPageState getPageState(String sessionId, int pageNumber) {
+        Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+        if (states == null) {
+            throw new IllegalArgumentException("Invalid session ID");
+        }
+        return states.get(pageNumber);
     }
 
     public String addTextToPdf(String sessionId, int pageNumber, String text,
@@ -130,8 +156,40 @@ public class PdfService {
         TextAnnotation annotation = new TextAnnotation(
                 annotationId, pageNumber, text, x, y, fontSize, fontFamily, color);
         textAnnotations.get(sessionId).put(annotationId, annotation);
+
+        // Apply text annotation to document
         applyTextAnnotation(document, annotation);
+
+        // Update page state
+        PdfPageState state = pageStates.get(sessionId).get(pageNumber);
+        if (state != null) {
+            PdfEditRequest request = new PdfEditRequest();
+            request.setSessionId(sessionId);
+            request.setPageNumber(pageNumber);
+            request.setText(text);
+            request.setX(x);
+            request.setY(y);
+            request.setFontSize(fontSize);
+            state.getEdits().add(request);
+        }
+
         return annotationId;
+    }
+
+    public void applyTextEdit(PdfEditRequest request) throws IOException {
+        String annotationId = addTextToPdf(
+                request.getSessionId(),
+                request.getPageNumber(),
+                request.getText(),
+                request.getX(),
+                request.getY(),
+                request.getFontSize(),
+                "helvetica",
+                "#000000"
+        );
+
+        // Store the annotation ID in the request for future reference
+        request.setId(annotationId);
     }
 
     public void editTextInPdf(String sessionId, int pageNumber, String textId,
@@ -163,6 +221,21 @@ public class PdfService {
 
         // Reapply all annotations for the page
         reapplyAnnotationsForPage(document, sessionId, pageNumber);
+
+        // Update page state
+        PdfPageState state = pageStates.get(sessionId).get(pageNumber);
+        if (state != null) {
+            // Find and update the corresponding edit request
+            for (PdfEditRequest editRequest : state.getEdits()) {
+                if (textId.equals(editRequest.getId())) {
+                    editRequest.setText(newText);
+                    editRequest.setX(x);
+                    editRequest.setY(y);
+                    editRequest.setFontSize(fontSize);
+                    break;
+                }
+            }
+        }
     }
 
     public void deleteTextFromPdf(String sessionId, int pageNumber, String textId) throws IOException {
@@ -187,9 +260,19 @@ public class PdfService {
 
         // Reapply all annotations for the page
         reapplyAnnotationsForPage(document, sessionId, pageNumber);
+
+        // Update page state
+        PdfPageState state = pageStates.get(sessionId).get(pageNumber);
+        if (state != null) {
+            state.getEdits().removeIf(edit -> textId.equals(edit.getId()));
+        }
     }
 
-    public int addPage(String sessionId, int position, String pageType) throws IOException {
+    public PdfPageState addPage(String sessionId, int position) throws IOException {
+        return addPage(sessionId, position, "blank");
+    }
+
+    public PdfPageState addPage(String sessionId, int position, String pageType) throws IOException {
         PDDocument document = documentSessions.get(sessionId);
         if (document == null) {
             throw new IllegalArgumentException("Invalid session ID");
@@ -225,10 +308,16 @@ public class PdfService {
             }
         }
 
-        return document.getNumberOfPages();
+        // Update page states
+        Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+        int newPageNumber = document.getNumberOfPages();
+        PdfPageState newState = new PdfPageState(newPageNumber);
+        states.put(newPageNumber, newState);
+
+        return newState;
     }
 
-    public int deletePage(String sessionId, int pageNumber) throws IOException {
+    public PdfPageState deletePage(String sessionId, int pageNumber) throws IOException {
         PDDocument document = documentSessions.get(sessionId);
         if (document == null) {
             throw new IllegalArgumentException("Invalid session ID");
@@ -239,7 +328,14 @@ public class PdfService {
         }
 
         document.removePage(pageNumber - 1);
-        return document.getNumberOfPages();
+
+        // Update page states
+        Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+        states.remove(pageNumber);
+
+        // Return state of current page (either same number or previous if deleted was last)
+        int currentPage = Math.min(pageNumber, document.getNumberOfPages());
+        return states.get(currentPage);
     }
 
     public int mergePdf(String sessionId, MultipartFile mergeFile) throws IOException {
@@ -252,6 +348,13 @@ public class PdfService {
             for (PDPage page : mergeDocument.getPages()) {
                 mainDocument.addPage(page);
             }
+
+            // Update page states
+            Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+            for (int i = states.size() + 1; i <= mainDocument.getNumberOfPages(); i++) {
+                states.put(i, new PdfPageState(i));
+            }
+
             return mainDocument.getNumberOfPages();
         }
     }
@@ -283,10 +386,27 @@ public class PdfService {
         zoomLevelMap.put(newSessionId, 1.0f);
         existingTextElements.put(newSessionId, new ArrayList<>());
 
+        // Initialize page states for new session
+        Map<Integer, PdfPageState> newStates = new HashMap<>();
+        for (int i = 1; i <= newDocument.getNumberOfPages(); i++) {
+            newStates.put(i, new PdfPageState(i));
+        }
+        pageStates.put(newSessionId, newStates);
+
+        // Update original session page states
+        Map<Integer, PdfPageState> originalStates = pageStates.get(sessionId);
+        for (int i = originalStates.size(); i >= splitAtPage; i--) {
+            originalStates.remove(i);
+        }
+
         return newSessionId;
     }
 
-    public byte[] getPageAsImage(String sessionId, int pageNumber, int dpi) throws IOException {
+    public byte[] renderPageAsImage(String sessionId, int pageNumber) throws IOException {
+        return renderPageAsImage(sessionId, pageNumber, 150);
+    }
+
+    public byte[] renderPageAsImage(String sessionId, int pageNumber, int dpi) throws IOException {
         PDDocument document = documentSessions.get(sessionId);
         if (document == null) {
             throw new IllegalArgumentException("Invalid session ID");
@@ -311,119 +431,6 @@ public class PdfService {
         stripper.setStartPage(pageNumber);
         stripper.setEndPage(pageNumber);
         return stripper.getText(document);
-    }
-
-    /* ==================== */
- /* == File Methods == */
- /* ==================== */
-    public Map<String, Object> getPdfInfo(MultipartFile file) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            Map<String, Object> info = new HashMap<>();
-            info.put("pages", document.getNumberOfPages());
-            info.put("title", document.getDocumentInformation().getTitle());
-            info.put("author", document.getDocumentInformation().getAuthor());
-            info.put("subject", document.getDocumentInformation().getSubject());
-            info.put("encrypted", document.isEncrypted());
-            return info;
-        }
-    }
-
-    public byte[] addTextToPdf(MultipartFile file, String text, float x, float y, int page) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            PDPage pdPage = document.getPage(page - 1);
-            try (PDPageContentStream contentStream = new PDPageContentStream(
-                    document, pdPage, PDPageContentStream.AppendMode.APPEND, true)) {
-                PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-                contentStream.setFont(font, 12);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(x, y);
-                contentStream.showText(text);
-                contentStream.endText();
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            return baos.toByteArray();
-        }
-    }
-
-    public List<byte[]> splitPdf(MultipartFile file) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            List<byte[]> pages = new ArrayList<>();
-            for (int i = 0; i < document.getNumberOfPages(); i++) {
-                try (PDDocument singlePageDoc = new PDDocument()) {
-                    singlePageDoc.addPage(document.getPage(i));
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    singlePageDoc.save(baos);
-                    pages.add(baos.toByteArray());
-                }
-            }
-            return pages;
-        }
-    }
-
-    public byte[] addWatermark(MultipartFile file, String watermarkText) throws IOException {
-        try (InputStream inputStream = file.getInputStream(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            PdfReader reader = new PdfReader(inputStream);
-            PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument pdfDoc = new PdfDocument(reader, writer);
-            Document document = new Document(pdfDoc);
-
-            for (int i = 1; i <= pdfDoc.getNumberOfPages(); i++) {
-                com.itextpdf.kernel.pdf.PdfPage page = pdfDoc.getPage(i);
-
-                Paragraph watermark = new Paragraph(watermarkText)
-                        .setFontSize(50)
-                        .setOpacity(0.3f)
-                        .setTextAlignment(TextAlignment.CENTER);
-
-                document.showTextAligned(watermark,
-                        page.getPageSize().getWidth() / 2,
-                        page.getPageSize().getHeight() / 2,
-                        i, TextAlignment.CENTER,
-                        VerticalAlignment.MIDDLE, 45);
-            }
-
-            document.close();
-            return outputStream.toByteArray();
-        }
-    }
-
-    public byte[] rotatePdf(MultipartFile file, int degrees) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            for (PDPage page : document.getPages()) {
-                page.setRotation(page.getRotation() + degrees);
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            return baos.toByteArray();
-        }
-    }
-
-    public byte[] encryptPdf(MultipartFile file, String password) throws IOException {
-        try (InputStream inputStream = file.getInputStream(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            PdfReader reader = new PdfReader(inputStream);
-            PdfWriter writer = new PdfWriter(outputStream,
-                    new WriterProperties().setStandardEncryption(
-                            password.getBytes(),
-                            password.getBytes(),
-                            EncryptionConstants.ALLOW_PRINTING,
-                            EncryptionConstants.ENCRYPTION_AES_128
-                    ));
-
-            PdfDocument pdfDoc = new PdfDocument(reader, writer);
-            pdfDoc.close();
-
-            return outputStream.toByteArray();
-        }
-    }
-
-    public String extractTextFromPdf(MultipartFile file) throws IOException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(document);
-        }
     }
 
     /* ==================== */
@@ -587,6 +594,7 @@ public class PdfService {
             }
             sessionFileNames.remove(sessionId);
             textAnnotations.remove(sessionId);
+            pageStates.remove(sessionId);
             currentPageMap.remove(sessionId);
             zoomLevelMap.remove(sessionId);
             existingTextElements.remove(sessionId);
@@ -606,4 +614,166 @@ public class PdfService {
         document.save(baos);
         // Document remains in memory for further editing
     }
+
+    public Map<String, Object> getPdfInfo(String sessionId) throws IOException {
+        PDDocument document = documentSessions.get(sessionId);
+        if (document == null) {
+            throw new IllegalArgumentException("Invalid session ID");
+        }
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("pageCount", document.getNumberOfPages());
+        info.put("fileName", getFileName(sessionId));
+        info.put("title", document.getDocumentInformation().getTitle());
+        info.put("author", document.getDocumentInformation().getAuthor());
+        info.put("subject", document.getDocumentInformation().getSubject());
+        info.put("encrypted", document.isEncrypted());
+        info.put("currentPage", currentPageMap.getOrDefault(sessionId, 1));
+        info.put("zoomLevel", zoomLevelMap.getOrDefault(sessionId, 1.0f));
+        return info;
+    }
+
+    public List<ExistingTextElement> getExistingTextElements(String sessionId, int pageNumber) {
+        List<ExistingTextElement> allElements = existingTextElements.get(sessionId);
+        if (allElements == null) {
+            return new ArrayList<>();
+        }
+
+        return allElements.stream()
+                .filter(element -> element.pageNumber == pageNumber)
+                .toList();
+    }
+
+    public void setCurrentPage(String sessionId, int pageNumber) {
+        currentPageMap.put(sessionId, pageNumber);
+    }
+
+    public int getCurrentPage(String sessionId) {
+        return currentPageMap.getOrDefault(sessionId, 1);
+    }
+
+    public void setZoomLevel(String sessionId, float zoomLevel) {
+        zoomLevelMap.put(sessionId, zoomLevel);
+    }
+
+    public float getZoomLevel(String sessionId) {
+        return zoomLevelMap.getOrDefault(sessionId, 1.0f);
+    }
+
+// Define the upload directory path (adjust as needed)
+    private static final String UPLOAD_DIR = "uploads";
+
+    public File getPdfFile(String sessionId) throws IOException {
+        Path sessionPath = Paths.get(UPLOAD_DIR, sessionId);
+        if (!Files.exists(sessionPath)) {
+            throw new IOException("Session not found");
+        }
+
+        Path pdfPath = sessionPath.resolve("document.pdf");
+        if (!Files.exists(pdfPath)) {
+            throw new IOException("PDF not found in session");
+        }
+
+        return pdfPath.toFile();
+    }
 }
+
+// package com.textro.pdfcraft.service;
+// import java.awt.image.BufferedImage;
+// import java.io.ByteArrayOutputStream;
+// import java.io.IOException;
+// import java.util.HashMap;
+// import java.util.Map;
+// import java.util.UUID;
+// import javax.imageio.ImageIO;
+// import org.apache.pdfbox.pdmodel.PDDocument;
+// import org.apache.pdfbox.pdmodel.PDPage;
+// import org.apache.pdfbox.pdmodel.PDPageContentStream;
+// import org.apache.pdfbox.pdmodel.common.PDRectangle;
+// import org.apache.pdfbox.pdmodel.font.PDFont;
+// import org.apache.pdfbox.pdmodel.font.PDType1Font;
+// import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+// import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+// import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+// import org.apache.pdfbox.rendering.PDFRenderer;
+// import org.springframework.stereotype.Service;
+// import org.springframework.web.multipart.MultipartFile;
+// import com.textro.pdfcraft.model.PdfEditRequest;
+// import com.textro.pdfcraft.model.PdfPageState;
+// @Service
+// public class PdfEditorService {
+//     private final Map<String, PDDocument> documentSessions = new HashMap<>();
+//     private final Map<String, Map<Integer, PdfPageState>> pageStates = new HashMap<>();
+//     public String processUpload(MultipartFile file) throws IOException {
+//         String sessionId = UUID.randomUUID().toString();
+//         // PDDocument document = PDDocument.load(file.getInputStream());
+//         PDDocument document = new PDDocument();
+//         PDPage page = new PDPage();
+//         document.addPage(page);
+//         documentSessions.put(sessionId, document);
+//         // Initialize page states
+//         Map<Integer, PdfPageState> states = new HashMap<>();
+//         for (int i = 1; i <= document.getNumberOfPages(); i++) {
+//             states.put(i, new PdfPageState(i));
+//         }
+//         pageStates.put(sessionId, states);
+//         return sessionId;
+//     }
+//     public PdfPageState getPageState(String sessionId, int pageNumber) {
+//         return pageStates.get(sessionId).get(pageNumber);
+//     }
+//     public void applyTextEdit(PdfEditRequest request) throws IOException {
+//         PDDocument document = documentSessions.get(request.getSessionId());
+//         PDPage page = document.getPage(request.getPageNumber() - 1);
+//         try (PDPageContentStream contentStream = new PDPageContentStream(
+//                 document, page, PDPageContentStream.AppendMode.APPEND, true)) {
+//             PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+//             contentStream.setFont(font, request.getFontSize());
+//             PDColor color = new PDColor(
+//                     new float[]{0, 0, 0}, PDDeviceRGB.INSTANCE);
+//             contentStream.setNonStrokingColor(color);
+//             contentStream.beginText();
+//             contentStream.newLineAtOffset(request.getX(), request.getY());
+//             contentStream.showText(request.getText());
+//             contentStream.endText();
+//         }
+//         // Update page state
+//         PdfPageState state = pageStates.get(request.getSessionId())
+//                 .get(request.getPageNumber());
+//         state.getEdits().add(request);
+//     }
+//     public PdfPageState addPage(String sessionId, int position) throws IOException {
+//         PDDocument document = documentSessions.get(sessionId);
+//         PDPage newPage = new PDPage(PDRectangle.A4);
+//         if (position < 0 || position >= document.getNumberOfPages()) {
+//             document.addPage(newPage);
+//         } else {
+//             document.getPages().insertBefore(newPage, document.getPage(position));
+//         }
+//         // Update page states
+//         Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+//         states.put(document.getNumberOfPages(), new PdfPageState(document.getNumberOfPages()));
+//         return states.get(document.getNumberOfPages());
+//     }
+//     public PdfPageState deletePage(String sessionId, int pageNumber) throws IOException {
+//         PDDocument document = documentSessions.get(sessionId);
+//         if (pageNumber < 1 || pageNumber > document.getNumberOfPages()) {
+//             throw new IllegalArgumentException("Invalid page number");
+//         }
+//         document.removePage(pageNumber - 1);
+//         // Update page states
+//         Map<Integer, PdfPageState> states = pageStates.get(sessionId);
+//         states.remove(pageNumber);
+//         // Return state of current page (either same number or previous if deleted was last)
+//         int currentPage = Math.min(pageNumber, document.getNumberOfPages());
+//         return states.get(currentPage);
+//     }
+//     public byte[] renderPageAsImage(String sessionId, int pageNumber) throws IOException {
+//         PDDocument document = documentSessions.get(sessionId);
+//         PDFRenderer renderer = new PDFRenderer(document);
+//         BufferedImage image = renderer.renderImage(pageNumber - 1);
+//         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//         ImageIO.write(image, "PNG", baos);
+//         return baos.toByteArray();
+//     }
+// }

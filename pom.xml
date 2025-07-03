@@ -27,8 +27,10 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>24</java.version>
+		<java.version>17</java.version>
 		<spring-ai.version>1.0.0</spring-ai.version>
+		 <maven.compiler.source>${java.version}</maven.compiler.source>
+         <maven.compiler.target>${java.version}</maven.compiler.target>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -78,8 +80,13 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>3.0.3</version>
+			<version>3.0.2</version>
 		</dependency>
+		<dependency>
+    <groupId>org.apache.pdfbox</groupId>
+    <artifactId>pdfbox-io</artifactId>
+    <version>3.0.2</version>
+</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox-tools</artifactId>

@@ -693,7 +693,6 @@
     <i class="fas fa-plus upload-icon"></i>
   </button>
 </div>
-
 <script>
   // Theme toggle functionality
   const themeToggle = document.getElementById('themeToggle');
@@ -730,7 +729,7 @@
 
   // File upload handling with enhanced UI feedback
   document.addEventListener('DOMContentLoaded', function() {
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (matches editor.html limit)
       const uploadButton = document.querySelector('.input-div');
       const uploadInput = document.querySelector('.input');
       const dropZone = document.querySelector('.main-card');
@@ -789,7 +788,7 @@
 
           // Check file size
           if (file.size > MAX_FILE_SIZE) {
-              statusText.textContent = 'File too large (max 10MB)';
+              statusText.textContent = 'File too large (max 50MB)';
               statusText.className = 'text-sm mt-4 text-center text-red-400';
               return;
           }
@@ -813,12 +812,15 @@
               } else if (data.fileId) {
                   window.location.href = 'editor.html?fileId=' + data.fileId;
               } else {
-                  alert('Upload failed');
+                  statusText.textContent = 'Upload failed';
+                  statusText.className = 'text-sm mt-4 text-center text-red-400';
               }
           })
-          .catch(() => alert('Upload error'))
+          .catch(() => {
+              statusText.textContent = 'Upload error';
+              statusText.className = 'text-sm mt-4 text-center text-red-400';
+          })
           .finally(() => {
-              uploadButton.style.opacity = '1';
               uploadButton.querySelector('.icon').classList.remove('animate-spin');
           });
       }

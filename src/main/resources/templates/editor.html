@@ -1,13 +1,69 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Editor - Textro PdfCraft</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Audiowide:wght@400&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Audiowide:wght@400&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+</script>
     <style>
+        #pdfCanvas, #pdfImage {
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+    display: block;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-page {
+    position: relative;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    min-height: 600px;
+    min-width: 450px;
+}
+        .pdf-container {
+            position: relative;
+            width: 100%;
+            height: 80vh;
+            border: 1px solid #ddd;
+            overflow: auto;
+        }
+
+        .pdf-page {
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .edit-area {
+            position: absolute;
+            border: 1px dashed blue;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+        }
+
+        .edit-modal {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
         :root {
             /* Cyberpunk Color Palette */
             --neon-cyan: #00f3ff;
@@ -16,19 +72,19 @@
             --neon-blue: #0080ff;
             --neon-green: #00ff80;
             --neon-yellow: #ffff00;
-            
+
             /* Background Colors */
             --bg-primary: #0a0a0f;
             --bg-secondary: #1a1a2e;
             --bg-tertiary: #16213e;
             --bg-panel: rgba(26, 26, 46, 0.95);
             --bg-glass: rgba(16, 33, 62, 0.8);
-            
+
             /* Text Colors */
             --text-primary: #ffffff;
             --text-secondary: #b8c5d6;
             --text-accent: var(--neon-cyan);
-            
+
             /* Border & Shadow */
             --border-glow: 0 0 10px;
             --shadow-neon: 0 0 20px;
@@ -45,7 +101,7 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 25% 25%, var(--neon-purple) 0%, transparent 50%),
                 radial-gradient(circle at 75% 75%, var(--neon-blue) 0%, transparent 50%),
                 linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -60,7 +116,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
             background-size: 50px 50px;
@@ -70,15 +126,31 @@
         }
 
         @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
         }
 
         /* Glowing Effects */
-        .glow-cyan { box-shadow: var(--border-glow) var(--neon-cyan); }
-        .glow-magenta { box-shadow: var(--border-glow) var(--neon-magenta); }
-        .glow-purple { box-shadow: var(--border-glow) var(--neon-purple); }
-        .glow-blue { box-shadow: var(--border-glow) var(--neon-blue); }
+        .glow-cyan {
+            box-shadow: var(--border-glow) var(--neon-cyan);
+        }
+
+        .glow-magenta {
+            box-shadow: var(--border-glow) var(--neon-magenta);
+        }
+
+        .glow-purple {
+            box-shadow: var(--border-glow) var(--neon-purple);
+        }
+
+        .glow-blue {
+            box-shadow: var(--border-glow) var(--neon-blue);
+        }
 
         /* Main Layout */
         .editor-container {
@@ -227,9 +299,46 @@
             transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .sidebar.collapsed + .main-content {
+        .sidebar.collapsed+.main-content {
             margin-left: 80px;
         }
+        .sidebar {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar.animating {
+    /* This prevents flickering during animation */
+    overflow: hidden;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.4s ease;
+    }
+    
+    .sidebar.mobile-hidden {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar:not(.mobile-hidden) {
+        transform: translateX(0);
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(0);
+        width: 100%;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+}
 
         /* Top Toolbar */
         .toolbar {
@@ -332,7 +441,7 @@
             justify-content: center;
             padding: 20px;
             position: relative;
-            background-image: 
+            background-image:
                 linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
             background-size: 30px 30px;
@@ -344,7 +453,7 @@
             background: white;
             border: 2px solid var(--neon-purple);
             border-radius: 12px;
-            box-shadow: 
+            box-shadow:
                 var(--shadow-neon) var(--neon-purple),
                 inset 0 0 20px rgba(138, 43, 226, 0.1);
             position: relative;
@@ -639,26 +748,27 @@
         .page-number-start {
             flex: 1;
         }
-        /* ensure the overlay buttons are properly spaced */
-.page-tools-overlay {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    padding: 8px;
-    background: rgba(26, 26, 46, 0.8);
-    border-radius: 8px;
-}
 
-.page-counter {
-    color: var(--text-primary);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    padding: 0 10px;
-    min-width: 80px;
-    text-align: center;
-}
+        /* ensure the overlay buttons are properly spaced */
+        .page-tools-overlay {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 8px;
+        }
+
+        .page-counter {
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            padding: 0 10px;
+            min-width: 80px;
+            text-align: center;
+        }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
@@ -666,39 +776,39 @@
                 transform: translateX(-100%);
                 width: 100%;
             }
-            
+
             .sidebar.mobile-expanded {
                 transform: translateX(0);
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
-            
+
             .toolbar {
                 padding: 10px 15px;
                 gap: 10px;
             }
-            
+
             .cyber-btn {
                 padding: 8px 12px;
                 font-size: 12px;
             }
-            
+
             .modal-content {
                 padding: 20px;
                 margin: 20px;
             }
-            
+
             .button-group {
                 flex-direction: column;
                 gap: 10px;
             }
-            
+
             .dialog-tabs {
                 flex-direction: column;
             }
-            
+
             .content-type-selector {
                 flex-direction: column;
             }
@@ -707,14 +817,15 @@
                 min-width: 100%;
                 min-height: 400px;
             }
+
             .page-tools-overlay {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    .page-counter {
-        padding: 5px 0;
-    }
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .page-counter {
+                padding: 5px 0;
+            }
         }
 
         /* Scrollbar Styling */
@@ -739,6 +850,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="editor-container">
         <!-- Enhanced Sidebar -->
@@ -746,7 +858,7 @@
             <button class="sidebar-toggle" id="sidebarToggle">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            
+
             <div class="sidebar-content">
                 <!-- File Management -->
                 <div class="nav-section">
@@ -907,18 +1019,19 @@
                 </div>
             </div>
 
-            <!-- Enhanced Canvas Area -->
-            <div class="canvas-container">
+            
+            <!-- <div class="canvas-container">
                 <div class="pdf-canvas">
                     <div class="pdf-page" id="pdfPage">
                         <div class="page-tools-overlay">
                             <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
                             <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
                             <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-                            <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
+                            <button class="page-tool-btn" title="Fit Page"><i
+                                    class="fas fa-expand-arrows-alt"></i></button>
                         </div>
-                        <!-- PDF content would be rendered here -->
-                        <div style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
+                         PDF content would be rendered here -->
+                        <!-- <div style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
                             PDF Page Content
                             <br><br>
                             <small>Click on tools to edit this page</small>
@@ -927,7 +1040,29 @@
                 </div>
             </div>
         </main>
+    </div> -->
+    
+    <div class="canvas-container">
+    <div class="pdf-canvas">
+        <div class="pdf-page" id="pdfPage">
+            <div class="page-tools-overlay">
+                <button class="page-tool-btn" id="zoomInBtn" title="Zoom In"><i class="fas fa-plus"></i></button>
+                <button class="page-tool-btn" id="zoomOutBtn" title="Zoom Out"><i class="fas fa-minus"></i></button>
+                <button class="page-tool-btn" id="fitWidthBtn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
+                <button class="page-tool-btn" id="fitPageBtn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
+            </div>
+            <!-- Actual PDF display elements -->
+            <canvas id="pdfCanvas" style="display:none;"></canvas>
+            <img id="pdfImage" style="max-width:100%; display:none;">
+            <!-- Fallback content -->
+            <div id="pdfPlaceholder" style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
+                PDF Page Content
+                <br><br>
+                <small>Upload a PDF to begin editing</small>
+            </div>
+        </div>
     </div>
+</div>
 
     <!-- Find & Replace Modal -->
     <div class="modal" id="findReplaceModal">
@@ -1001,7 +1136,8 @@
                     <div id="leftHeaderText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="leftHeaderTextInput" placeholder="Enter header text">
+                            <input type="text" class="form-input" id="leftHeaderTextInput"
+                                placeholder="Enter header text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1066,7 +1202,8 @@
                     <div id="centerHeaderText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="centerHeaderTextInput" placeholder="Enter header text">
+                            <input type="text" class="form-input" id="centerHeaderTextInput"
+                                placeholder="Enter header text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1131,7 +1268,8 @@
                     <div id="rightHeaderText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="rightHeaderTextInput" placeholder="Enter header text">
+                            <input type="text" class="form-input" id="rightHeaderTextInput"
+                                placeholder="Enter header text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1220,7 +1358,8 @@
                     <div id="leftFooterText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="leftFooterTextInput" placeholder="Enter footer text">
+                            <input type="text" class="form-input" id="leftFooterTextInput"
+                                placeholder="Enter footer text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1290,7 +1429,8 @@
                     <div id="centerFooterText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="centerFooterTextInput" placeholder="Enter footer text">
+                            <input type="text" class="form-input" id="centerFooterTextInput"
+                                placeholder="Enter footer text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1360,7 +1500,8 @@
                     <div id="rightFooterText" class="content-type-content">
                         <div class="form-group">
                             <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="rightFooterTextInput" placeholder="Enter footer text">
+                            <input type="text" class="form-input" id="rightFooterTextInput"
+                                placeholder="Enter footer text">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Font:</label>
@@ -1436,246 +1577,115 @@
                 </div>
             </div>
         </div>
+        <div class="container mt-4">
+            <h1>PDF Editor</h1>
+
+            
+<!-- File Upload -->
+<div class="toolbar-section">
+    <div id="uploadContainer">
+        <input type="file" id="pdfUpload" name="file" accept=".pdf" required style="display: none;">
+        <button type="button" id="uploadBtn" class="cyber-btn" onclick="document.getElementById('pdfUpload').click()">
+            <i class="fas fa-upload"></i>
+            <span>Upload PDF</span>
+        </button>
+        <div id="fileInfo" style="display: none; margin-left: 10px;"></div>
+    </div>
+</div>
+            <!-- File Upload -->
+            <!-- <form th:action="@{/editor/upload}" method="post" enctype="multipart/form-data" class="mb-4">
+            <input type="file" name="file" accept=".pdf" required>
+            <button type="submit" class="btn btn-primary">Upload PDF</button>
+        </form>
+         <div class="pdf-container" id="pdfContainer">
+            <div th:if="${pageState != null}">
+                <img th:src="@{/editor/page-image(sessionId=${sessionId}, pageNumber=${pageState.pageNumber})}" 
+                     class="pdf-page" id="pdfPage"> -->
+
+            <!-- Editable areas -->
+            <div th:each="edit : ${pageState.edits}" class="edit-area"
+                th:style="'left:' + ${edit.x} + 'px; top:' + ${edit.y} + 'px;'" th:text="${edit.text}"></div>
+        </div>
+
+        <div th:unless="${pageState != null}" class="text-center py-5">
+            <p>Please upload a PDF file to begin editing</p>
+        </div>
     </div>
 
+    <!-- Page Controls -->
+    <div th:if="${pageState != null}" class="mt-3">
+        <button class="btn btn-secondary"
+            th:onclick="'window.location.href=\'/editor/page?sessionId=' + ${sessionId} + '&pageNumber=' + (${pageState.pageNumber} - 1) + '\''"
+            th:disabled="${pageState.pageNumber <= 1}">Previous</button>
+
+        <span class="mx-3">
+            Page <span th:text="${pageState.pageNumber}"></span> of <span th:text="${pageState.totalPages}"></span>
+        </span>
+
+        <button class="btn btn-secondary"
+            th:onclick="'window.location.href=\'/editor/page?sessionId=' + ${sessionId} + '&pageNumber=' + (${pageState.pageNumber} + 1) + '\''"
+            th:disabled="${pageState.pageNumber >= pageState.totalPages}">Next</button>
+
+        <button class="btn btn-success ms-3"
+            th:onclick="'window.location.href=\'/editor/save?sessionId=' + ${sessionId} + '\'">Save PDF</button>
+
+        <button class="btn btn-danger ms-3"
+            th:onclick="'window.location.href=\'/editor/delete-page?sessionId=' + ${sessionId} + '&pageNumber=' + ${pageState.pageNumber} + '\'">Delete
+            Page</button>
+
+        <button class="btn btn-primary ms-3"
+            th:onclick="'window.location.href=\'/editor/add-page?sessionId=' + ${sessionId} + '&position=' + ${pageState.pageNumber} + '\'">Add
+            Page</button>
+    </div>
+    </div>
+
+    <!-- Edit Modal (hidden by default) -->
+    <div id="editModal" class="edit-modal" style="display: none;">
+        <form id="editForm">
+            <input type="hidden" id="editSessionId">
+            <input type="hidden" id="editPageNumber">
+            <input type="hidden" id="editX">
+            <input type="hidden" id="editY">
+
+            <div class="mb-3">
+                <textarea id="editText" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label>Font Size:</label>
+                <input type="number" id="editFontSize" class="form-control" value="12" min="8" max="72">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="saveEdit()">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+        </form>
+    </div>
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/editor.js"></script>
     <script>
-    // Handle file upload from the upload button
-    document.querySelectorAll('.input-div').forEach(div => {
-        div.addEventListener('click', function(e) {
-            if (e.target.classList.contains('input')) return;
-            this.querySelector('input').click();
-        });
-    });
-
-    // Handle file selection
-    document.querySelectorAll('.input').forEach(input => {
-        input.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files.length > 0) {
-                // Check if it's a PDF
-                if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                    // Store the file in localStorage temporarily
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        localStorage.setItem('currentPdf', event.target.result);
-                        // Redirect to editor
-                        window.location.href = 'editor.html';
-                    };
-                    reader.readAsDataURL(files[0]);
-                } else {
-                    alert('Please upload a PDF file');
-                }
-            }
-        });
-    });
-
-    // Add drag and drop functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const uploadAreas = document.querySelectorAll('.main-card');
-
-        uploadAreas.forEach(area => {
-            area.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('border-purple-400');
-            });
-
-            area.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                this.classList.remove('border-purple-400');
-            });
-
-            area.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('border-purple-400');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    // Check if it's a PDF
-                    if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                        // Store the file in localStorage temporarily
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            localStorage.setItem('currentPdf', event.target.result);
-                            // Redirect to editor
-                            window.location.href = 'editor.html';
-                        };
-                        reader.readAsDataURL(files[0]);
-                    } else {
-                        alert('Please upload a PDF file');
-                    }
-                }
-            });
-        });
-    });
-
-    // PDF Viewer and Editor Functions
-    let currentPage = 1;
-    let totalPages = 1;
-    let pdfDoc = null;
-    let scale = 1.0;
-    const scaleStep = 0.25;
-
-    // Function to render PDF page
-    function renderPage(pageNum) {
-        pdfDoc.getPage(pageNum).then(function(page) {
-            const viewport = page.getViewport({ scale: scale });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            const pdfPage = document.getElementById('pdfPage');
-            
-            // Clear previous content
-            pdfPage.innerHTML = '';
-            
-            // Set canvas dimensions
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            // Append canvas to page container
-            pdfPage.appendChild(canvas);
-            
-            // Add page tools overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'page-tools-overlay';
-           // In the renderPage function, update the overlay HTML:
-overlay.innerHTML = `
-    <button class="page-tool-btn" title="Add Page Left" onclick="addPageLeft()"><i class="fas fa-plus-square"></i></button>
-    <button class="page-tool-btn" title="Delete Page" onclick="deletePage()"><i class="fas fa-trash-alt"></i></button>
-    <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
-    <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
-    <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-    <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
-    <button class="page-tool-btn" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
-    <span class="page-counter">${currentPage} / ${totalPages}</span>
-    <button class="page-tool-btn" title="Next Page"><i class="fas fa-chevron-right"></i></button>
-`;
-            pdfPage.appendChild(overlay);
-            
-            // Add event listeners to page tools
-            // In the renderPage function, update the overlay HTML:
-
-            overlay.querySelector('[title="Zoom In"]').addEventListener('click', zoomIn);
-            overlay.querySelector('[title="Zoom Out"]').addEventListener('click', zoomOut);
-            overlay.querySelector('[title="Fit Width"]').addEventListener('click', fitWidth);
-            overlay.querySelector('[title="Fit Page"]').addEventListener('click', fitPage);
-            overlay.querySelector('[title="Previous Page"]').addEventListener('click', prevPage);
-            overlay.querySelector('[title="Next Page"]').addEventListener('click', nextPage);
-            
-            // Render PDF page into canvas context
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            
-            page.render(renderContext);
-        });
-    }
-
-    // Navigation functions
-    function nextPage() {
-        if (currentPage >= totalPages) return;
-        currentPage++;
-        renderPage(currentPage);
-    }
-
-    function prevPage() {
-        if (currentPage <= 1) return;
-        currentPage--;
-        renderPage(currentPage);
-    }
-
-    // Zoom functions
-    function zoomIn() {
-        scale += scaleStep;
-        renderPage(currentPage);
-    }
-
-    function zoomOut() {
-        if (scale <= scaleStep) return;
-        scale -= scaleStep;
-        renderPage(currentPage);
-    }
-
-    function fitWidth() {
-        const container = document.getElementById('pdfPage');
-        pdfDoc.getPage(currentPage).then(function(page) {
-            const viewport = page.getViewport({ scale: 1.0 });
-            scale = container.clientWidth / viewport.width;
-            renderPage(currentPage);
-        });
-    }
-
-    function fitPage() {
-        const container = document.getElementById('pdfPage');
-        pdfDoc.getPage(currentPage).then(function(page) {
-            const viewport = page.getViewport({ scale: 1.0 });
-            const scaleX = container.clientWidth / viewport.width;
-            const scaleY = container.clientHeight / viewport.height;
-            scale = Math.min(scaleX, scaleY);
-            renderPage(currentPage);
-        });
-    }
-
-    // Load PDF document
-    function loadPdf(pdfData) {
-        // Initialize PDF.js
-        pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         
-        // Remove data URL prefix if present
-        const base64Data = pdfData.replace(/^data:application\/pdf;base64,/, '');
-        
-        // Load the PDF
-        const loadingTask = pdfjsLib.getDocument({ data: atob(base64Data) });
-        loadingTask.promise.then(function(pdf) {
-            pdfDoc = pdf;
-            totalPages = pdf.numPages;
-            currentPage = 1;
-            
-            // Render the first page
-            renderPage(currentPage);
-            
-            // Update the "Current PDF" nav item with the filename
-            const pdfNavItem = document.querySelector('.nav-item .nav-link.active');
-            const fileName = 'document.pdf'; // You can extract this from the data URL if needed
-            pdfNavItem.querySelector('.nav-text').textContent = fileName.length > 20 
-                ? fileName.substring(0, 20) + '...' 
-                : fileName;
-        }).catch(function(error) {
-            console.error('PDF loading error:', error);
-            alert('Error loading PDF. Please try another file.');
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            window.pdfUploadManager = new PdfUploadManager();
+    
+    // Check if we have a session ID in the URL or storage
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('sessionId') || sessionStorage.getItem('pdfSessionId');
+         if (sessionId) {
+        // Initialize editor with existing session
+        window.pdfEditor = new PdfEditor(sessionId, 1);
+        document.getElementById('pdfContainer').style.display = 'block';
     }
 
-    // Check for PDF in localStorage when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        const pdfData = localStorage.getItem('currentPdf');
-        if (pdfData) {
-            loadPdf(pdfData);
-        } else {
-            // Show default content if no PDF is loaded
-            document.getElementById('pdfPage').innerHTML = `
-                <div class="page-tools-overlay">
-                    <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
-                    <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
-                    <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-                    <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
-                </div>
-                <div style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
-                    No PDF loaded. Please upload a PDF file.
-                    <br><br>
-                    <button class="cyber-btn" onclick="window.location.href='index.html'">
-                        <i class="fas fa-upload"></i> Upload PDF
-                    </button>
-                </div>
-            `;
-        }
-    });
 
-    // Sidebar toggle functionality
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
+    const mainContent = document.querySelector('.main-content');
     
-    sidebarToggle.addEventListener('click', () => {
+    // Toggle sidebar
+    function toggleSidebar() {
         sidebar.classList.toggle('collapsed');
+        
+        // Update the toggle button icon
         const icon = sidebarToggle.querySelector('i');
         if (sidebar.classList.contains('collapsed')) {
             icon.classList.remove('fa-chevron-left');
@@ -1684,479 +1694,116 @@ overlay.innerHTML = `
             icon.classList.remove('fa-chevron-right');
             icon.classList.add('fa-chevron-left');
         }
-    });
-
-    // Mobile sidebar toggle
-    function toggleMobileSidebar() {
-        sidebar.classList.toggle('mobile-expanded');
-    }
-
-    // Modal functions
-    function openFindReplaceModal() {
-        document.getElementById('findReplaceModal').classList.add('active');
-    }
-
-    function closeFindReplaceModal() {
-        document.getElementById('findReplaceModal').classList.remove('active');
-    }
-
-    function openHeaderModal() {
-        document.getElementById('headerModal').classList.add('active');
-    }
-
-    function closeHeaderModal() {
-        document.getElementById('headerModal').classList.remove('active');
-    }
-
-    function openFooterModal() {
-        document.getElementById('footerModal').classList.add('active');
-    }
-
-    function closeFooterModal() {
-        document.getElementById('footerModal').classList.remove('active');
-    }
-
-    // Tab switching
-    function switchTab(button, tabId) {
-        // Get all tabs in the current modal
-        const modal = button.closest('.modal-content');
-        const tabs = modal.querySelectorAll('.dialog-tab');
-        const tabContents = modal.querySelectorAll('.tab-content');
         
-        // Remove active class from all tabs and contents
-        tabs.forEach(tab => tab.classList.remove('active'));
-        tabContents.forEach(content => content.style.display = 'none');
-        
-        // Add active class to clicked tab and show corresponding content
-        button.classList.add('active');
-        document.getElementById(tabId).style.display = 'block';
+        // Add animation class for smooth transition
+        sidebar.classList.add('animating');
+        setTimeout(() => {
+            sidebar.classList.remove('animating');
+        }, 400); // Match this with your CSS transition duration
     }
-
-    // Content type selection
-    function selectContentType(option, contentId) {
-        const container = option.closest('.content-type-selector');
-        const options = container.querySelectorAll('.type-option');
-        const contentContainer = option.closest('.tab-content');
-        const contentSections = contentContainer.querySelectorAll('.content-type-content');
-        
-        // Remove active class from all options
-        options.forEach(opt => opt.classList.remove('active'));
-        
-        // Hide all content sections
-        contentSections.forEach(section => section.style.display = 'none');
-        
-        // Add active class to clicked option and show corresponding content
-        option.classList.add('active');
-        document.getElementById(contentId).style.display = 'block';
-    }
-
-    // Checkbox toggle
-    function toggleCheckbox(checkbox) {
-        checkbox.classList.toggle('checked');
-        
-        // Special case for page number options in footer
-        if (checkbox.id.includes('PageNumber')) {
-            const options = document.getElementById('pageNumberOptions');
-            if (options) {
-                options.style.display = checkbox.classList.contains('checked') ? 'flex' : 'none';
-            }
+    
+    // Initialize sidebar state
+    function initSidebar() {
+        // Check localStorage for saved state
+        const savedState = localStorage.getItem('sidebarState');
+        if (savedState === 'collapsed') {
+            sidebar.classList.add('collapsed');
+            sidebarToggle.querySelector('i').classList.add('fa-chevron-right');
+            sidebarToggle.querySelector('i').classList.remove('fa-chevron-left');
         }
     }
-
-    // Image upload preview
-    function setupImageUpload(uploadId, previewId) {
-        const upload = document.getElementById(uploadId);
-        const preview = document.getElementById(previewId);
-        
-        upload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                }
-                reader.readAsDataURL(file);
+    
+    // Save sidebar state
+    function saveSidebarState() {
+        if (sidebar.classList.contains('collapsed')) {
+            localStorage.setItem('sidebarState', 'collapsed');
+        } else {
+            localStorage.setItem('sidebarState', 'expanded');
+        }
+    }
+    
+    // Mobile menu toggle
+    function handleMobileMenu() {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('mobile-hidden');
+        } else {
+            sidebar.classList.remove('mobile-hidden');
+            initSidebar(); // Restore saved state on larger screens
+        }
+    }
+    
+    // Event listeners
+    sidebarToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleSidebar();
+        saveSidebarState();
+    });
+    
+    // Handle mobile view
+    window.addEventListener('resize', handleMobileMenu);
+    
+    // Close sidebar when clicking on a nav link (mobile)
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('mobile-hidden');
             }
         });
-    }
-
-    // Initialize image uploads
-    setupImageUpload('leftHeaderImageUpload', 'leftHeaderImagePreview');
-    setupImageUpload('centerHeaderImageUpload', 'centerHeaderImagePreview');
-    setupImageUpload('rightHeaderImageUpload', 'rightHeaderImagePreview');
-    setupImageUpload('leftFooterImageUpload', 'leftFooterImagePreview');
-    setupImageUpload('centerFooterImageUpload', 'centerFooterImagePreview');
-    setupImageUpload('rightFooterImageUpload', 'rightFooterImagePreview');
-
-    // Enhanced Editor Functions
-    function addPage() { 
-        if (pdfDoc) {
-            alert('Adding a new page would be implemented here');
-            // In a real implementation, you would add a blank page to the PDF
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function rotatePage() { 
-        if (pdfDoc) {
-            alert('Rotating page would be implemented here');
-            // In a real implementation, you would rotate the current page
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function mergePDF() { 
-        alert('Merge PDF functionality would open a file selector');
-    }
-
-    function splitPDF() { 
-        if (pdfDoc) {
-            alert('Split PDF would be implemented here');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function addText() { 
-        if (pdfDoc) {
-            alert('Text tool activated. Click on the PDF to add text.');
-            // In a real implementation, you would set up a text addition mode
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function activateHighlight() { 
-        if (pdfDoc) {
-            alert('Highlight tool activated. Select text to highlight.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function activateDraw() { 
-        if (pdfDoc) {
-            alert('Draw tool activated. Click and drag to draw on the PDF.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    function insertImage() { 
-        if (pdfDoc) {
-            alert('Image tool activated. Select an image file to insert.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
-
-    // File operations
-    function openFileManager() {
-        alert('File manager would open here');
-        // In a real implementation, you would show a file browser
-    }
-
-    function savePDF() {
-        const pdfData = localStorage.getItem('currentPdf');
-        if (pdfData) {
-            // Create a download link
-            const link = document.createElement('a');
-            link.href = pdfData;
-            link.download = 'edited_document.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else {
-            alert('No PDF loaded to save');
-        }
-    }
-
-    // Update the save button event listener
-    document.querySelector('.cyber-btn-primary[onclick="savePDF()"]').addEventListener('click', savePDF);
-
-    // Add these functions to your script section:
-
-function addPageLeft() {
-    if (pdfDoc) {
-        // In a real implementation, you would insert a blank page before the current page
-        alert(`Adding a new page to the left of page ${currentPage}`);
-        // After adding the page, you would need to:
-        // 1. Update the PDF document
-        // 2. Increment totalPages
-        // 3. Increment currentPage (since we're inserting before)
-        // 4. Re-render the new page
-        // For this demo, we'll just show an alert
-    } else {
-        alert('Please load a PDF first');
-    }
-}
-
-function deletePage() {
-    if (pdfDoc) {
-        if (totalPages <= 1) {
-            alert("Can't delete the only page in the document");
-            return;
-        }
-        
-        if (confirm(`Are you sure you want to delete page ${currentPage}?`)) {
-            // In a real implementation, you would:
-            // 1. Remove the current page from the PDF document
-            // 2. Decrement totalPages
-            // 3. Adjust currentPage if needed
-            // 4. Re-render the appropriate page
-            
-            // For this demo, we'll simulate the behavior:
-            totalPages--;
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            renderPage(currentPage);
-            alert(`Page ${currentPage} deleted (simulated)`);
-        }
-    } else {
-        alert('Please load a PDF first');
-    }
-}
-</script>
-
-
-    <!-- <script>
-
-
-       // Handle file upload from the upload button
-document.querySelectorAll('.input-div').forEach(div => {
-    div.addEventListener('click', function(e) {
-        if (e.target.classList.contains('input')) return;
-        this.querySelector('input').click();
     });
+    
+    // Initialize
+    initSidebar();
+    handleMobileMenu();
 });
+        // // Handle PDF click events
+        // document.getElementById('pdfPage')?.addEventListener('click', function (e) {
+        //     const rect = this.getBoundingClientRect();
+        //     const x = e.clientX - rect.left;
+        //     const y = e.clientY - rect.top;
 
-// Handle file selection
-document.querySelectorAll('.input').forEach(input => {
-    input.addEventListener('change', function(e) {
-        const files = e.target.files;
-        if (files.length > 0) {
-            // Check if it's a PDF
-            if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                // Store the file in localStorage temporarily
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    localStorage.setItem('currentPdf', event.target.result);
-                    // Redirect to editor
-                    window.location.href = 'editor.html';
-                };
-                reader.readAsDataURL(files[0]);
-            } else {
-                alert('Please upload a PDF file');
-            }
-        }
-    });
-});
+        //     // Show edit modal
+        //     const modal = document.getElementById('editModal');
+        //     modal.style.display = 'block';
+        //     modal.style.left = (e.clientX + 10) + 'px';
+        //     modal.style.top = (e.clientY + 10) + 'px';
 
-// Add drag and drop functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadAreas = document.querySelectorAll('.main-card');
+        //     // Set form values
+        //     document.getElementById('editSessionId').value = '[[${sessionId}]]';
+        //     document.getElementById('editPageNumber').value = '[[${pageState.pageNumber}]]';
+        //     document.getElementById('editX').value = x;
+        //     document.getElementById('editY').value = y;
+        // });
 
-    uploadAreas.forEach(area => {
-        area.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('border-purple-400');
-        });
+        // function saveEdit() {
+        //     const request = {
+        //         sessionId: document.getElementById('editSessionId').value,
+        //         pageNumber: parseInt(document.getElementById('editPageNumber').value),
+        //         text: document.getElementById('editText').value,
+        //         x: parseFloat(document.getElementById('editX').value),
+        //         y: parseFloat(document.getElementById('editY').value),
+        //         fontSize: parseFloat(document.getElementById('editFontSize').value)
+        //     };
 
-        area.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-purple-400');
-        });
+        //     fetch('/editor/edit-text', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         },
+        //         body: JSON.stringify(request)
+        //     }).then(response => {
+        //         if (response.ok) {
+        //             location.reload(); // Refresh to show changes
+        //         }
+        //     });
 
-        area.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-purple-400');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                // Check if it's a PDF
-                if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                    // Store the file in localStorage temporarily
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        localStorage.setItem('currentPdf', event.target.result);
-                        // Redirect to editor
-                        window.location.href = 'editor.html';
-                    };
-                    reader.readAsDataURL(files[0]);
-                } else {
-                    alert('Please upload a PDF file');
-                }
-            }
-        });
-    });
-});
-        // Sidebar toggle functionality
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const icon = sidebarToggle.querySelector('i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-chevron-left');
-                icon.classList.add('fa-chevron-right');
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-left');
-            }
-        });
+        //     cancelEdit();
+        // }
 
-        // Mobile sidebar toggle
-        function toggleMobileSidebar() {
-            sidebar.classList.toggle('mobile-expanded');
-        }
-
-        // Modal functions
-        function openFindReplaceModal() {
-            document.getElementById('findReplaceModal').classList.add('active');
-        }
-
-        function closeFindReplaceModal() {
-            document.getElementById('findReplaceModal').classList.remove('active');
-        }
-
-        function openHeaderModal() {
-            document.getElementById('headerModal').classList.add('active');
-        }
-
-        function closeHeaderModal() {
-            document.getElementById('headerModal').classList.remove('active');
-        }
-
-        function openFooterModal() {
-            document.getElementById('footerModal').classList.add('active');
-        }
-
-        function closeFooterModal() {
-            document.getElementById('footerModal').classList.remove('active');
-        }
-
-        // Tab switching
-        function switchTab(button, tabId) {
-            // Get all tabs in the current modal
-            const modal = button.closest('.modal-content');
-            const tabs = modal.querySelectorAll('.dialog-tab');
-            const tabContents = modal.querySelectorAll('.tab-content');
-            
-            // Remove active class from all tabs and contents
-            tabs.forEach(tab => tab.classList.remove('active'));
-            tabContents.forEach(content => content.style.display = 'none');
-            
-            // Add active class to clicked tab and show corresponding content
-            button.classList.add('active');
-            document.getElementById(tabId).style.display = 'block';
-        }
-
-        // Content type selection
-        function selectContentType(option, contentId) {
-            const container = option.closest('.content-type-selector');
-            const options = container.querySelectorAll('.type-option');
-            const contentContainer = option.closest('.tab-content');
-            const contentSections = contentContainer.querySelectorAll('.content-type-content');
-            
-            // Remove active class from all options
-            options.forEach(opt => opt.classList.remove('active'));
-            
-            // Hide all content sections
-            contentSections.forEach(section => section.style.display = 'none');
-            
-            // Add active class to clicked option and show corresponding content
-            option.classList.add('active');
-            document.getElementById(contentId).style.display = 'block';
-        }
-
-        // Checkbox toggle
-        function toggleCheckbox(checkbox) {
-            checkbox.classList.toggle('checked');
-            
-            // Special case for page number options in footer
-            if (checkbox.id.includes('PageNumber')) {
-                const options = document.getElementById('pageNumberOptions');
-                if (options) {
-                    options.style.display = checkbox.classList.contains('checked') ? 'flex' : 'none';
-                }
-            }
-        }
-
-        // Image upload preview
-        function setupImageUpload(uploadId, previewId) {
-            const upload = document.getElementById(uploadId);
-            const preview = document.getElementById(previewId);
-            
-            upload.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        preview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-
-        // Initialize image uploads
-        setupImageUpload('leftHeaderImageUpload', 'leftHeaderImagePreview');
-        setupImageUpload('centerHeaderImageUpload', 'centerHeaderImagePreview');
-        setupImageUpload('rightHeaderImageUpload', 'rightHeaderImagePreview');
-        setupImageUpload('leftFooterImageUpload', 'leftFooterImagePreview');
-        setupImageUpload('centerFooterImageUpload', 'centerFooterImagePreview');
-        setupImageUpload('rightFooterImageUpload', 'rightFooterImagePreview');
-
-        // Placeholder functions for actions
-        function addPage() { alert('Add Page functionality would go here'); }
-        function rotatePage() { alert('Rotate Page functionality would go here'); }
-        function mergePDF() { alert('Merge PDF functionality would go here'); }
-        function splitPDF() { alert('Split PDF functionality would go here'); }
-        function ocrTool() { alert('OCR Scan functionality would go here'); }
-        function aiSummarizer() { alert('AI Summarizer functionality would go here'); }
-        function voiceNotes() { alert('Voice Notes functionality would go here'); }
-        function addText() { alert('Add Text functionality would go here'); }
-        function activateHighlight() { alert('Highlight functionality would go here'); }
-        function activateDraw() { alert('Draw functionality would go here'); }
-        function addStickyNote() { alert('Sticky Note functionality would go here'); }
-        function openSignatureModal() { alert('Signature functionality would go here'); }
-        function insertImage() { alert('Insert Image functionality would go here'); }
-        function insertQR() { alert('Insert QR Code functionality would go here'); }
-        function undo() { alert('Undo functionality would go here'); }
-        function redo() { alert('Redo functionality would go here'); }
-        function savePDF() { alert('Save PDF functionality would go here'); }
-        function findNext() { alert('Find Next functionality would go here'); }
-        function replaceText() { alert('Replace functionality would go here'); }
-        function replaceAll() { alert('Replace All functionality would go here'); }
-        function applyHeaderSettings() { alert('Apply Header Settings functionality would go here'); closeHeaderModal(); }
-        function applyFooterSettings() { alert('Apply Footer Settings functionality would go here'); closeFooterModal(); }
-
-        // File operations
-function openFileManager() {
-    alert('File manager would open here');
-    // In a real implementation, you would show a file browser
-}
-
-function savePDF() {
-    const pdfData = localStorage.getItem('currentPdf');
-    if (pdfData) {
-        // Create a download link
-        const link = document.createElement('a');
-        link.href = pdfData;
-        link.download = 'edited_document.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else {
-        alert('No PDF loaded to save');
-    }
-}
-
-// Update the save button event listener
-document.querySelector('.cyber-btn-primary[onclick="savePDF()"]').addEventListener('click', savePDF);
-    </script> -->
+        // function cancelEdit() {
+        //     document.getElementById('editModal').style.display = 'none';
+        // }
+    </script>
 </body>
+
 </html>

@@ -1,5 +1,7 @@
 package com.textro.pdfcraft.config;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,8 +11,6 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -22,22 +22,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authz -> authz
-                        .anyRequest().permitAll()  // ✅ No authentication required
+                .anyRequest().permitAll() // ✅ No authentication required
                 )
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentTypeOptions(contentType -> {})
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .maxAgeInSeconds(31536000)
-                                .includeSubDomains(true)
-                                .preload(true)
-                        )
-                        .referrerPolicy(referrer -> referrer
-                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                        )
+                .frameOptions(frame -> frame.deny())
+                .contentTypeOptions(contentType -> {
+                })
+                .httpStrictTransportSecurity(hsts -> hsts
+                .maxAgeInSeconds(31536000)
+                .includeSubDomains(true)
+                .preload(true)
                 )
-                .logout(logout -> logout.disable())     // 🔒 Disable logout handling
-                .formLogin(form -> form.disable())      // 🔒 Disable login page completely
+                .referrerPolicy(referrer -> referrer
+                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                )
+                )
+                .logout(logout -> logout.disable()) // 🔒 Disable logout handling
+                .formLogin(form -> form.disable()) // 🔒 Disable login page completely
                 .httpBasic(basic -> basic.disable());   // 🔒 Disable HTTP Basic auth too
 
         return http.build();
@@ -56,7 +57,6 @@ public class SecurityConfig {
         return source;
     }
 }
-
 
 //package com.textro.pdfcraft.config;
 //

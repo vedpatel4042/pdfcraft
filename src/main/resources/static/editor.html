@@ -1,37 +1,37 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Editor - Textro PdfCraft</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Audiowide:wght@400&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Education-friendly -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+    
     <style>
         :root {
-            /* Cyberpunk Color Palette */
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff0080;
-            --neon-purple: #8a2be2;
-            --neon-blue: #0080ff;
-            --neon-green: #00ff80;
-            --neon-yellow: #ffff00;
-            
-            /* Background Colors */
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #1a1a2e;
-            --bg-tertiary: #16213e;
-            --bg-panel: rgba(26, 26, 46, 0.95);
-            --bg-glass: rgba(16, 33, 62, 0.8);
-            
-            /* Text Colors */
-            --text-primary: #ffffff;
-            --text-secondary: #b8c5d6;
-            --text-accent: var(--neon-cyan);
-            
-            /* Border & Shadow */
-            --border-glow: 0 0 10px;
-            --shadow-neon: 0 0 20px;
+            /* Education-friendly color palette */
+            --primary-blue: #2c3e50;
+            --secondary-blue: #3498db;
+            --accent-blue: #2980b9;
+            --light-blue: #ecf0f1;
+            --dark-blue: #1a252f;
+            --success-green: #27ae60;
+            --warning-orange: #f39c12;
+            --error-red: #e74c3c;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --bg-light: #f9f9f9;
+            --bg-dark: #2c3e50;
         }
 
         * {
@@ -41,352 +41,290 @@
         }
 
         body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 25% 25%, var(--neon-purple) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, var(--neon-blue) 0%, transparent 50%),
-                linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
             min-height: 100vh;
-        }
-
-        /* Animated Grid Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        /* Glowing Effects */
-        .glow-cyan { box-shadow: var(--border-glow) var(--neon-cyan); }
-        .glow-magenta { box-shadow: var(--border-glow) var(--neon-magenta); }
-        .glow-purple { box-shadow: var(--border-glow) var(--neon-purple); }
-        .glow-blue { box-shadow: var(--border-glow) var(--neon-blue); }
-
-        /* Main Layout */
-        .editor-container {
-            display: flex;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* Enhanced Sidebar */
-        .sidebar {
-            width: 280px;
-            background: var(--bg-panel);
-            backdrop-filter: blur(20px);
-            border-right: 2px solid var(--neon-cyan);
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            overflow: hidden;
-        }
-
-        .sidebar.collapsed {
-            width: 80px;
-        }
-
-        .sidebar-toggle {
-            position: absolute;
-            top: 20px;
-            right: -15px;
-            width: 30px;
-            height: 30px;
-            background: var(--neon-cyan);
-            border: none;
-            border-radius: 50%;
-            color: var(--bg-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            box-shadow: var(--shadow-neon) var(--neon-cyan);
-            z-index: 1001;
-        }
-
-        .sidebar-content {
-            padding: 60px 0 20px;
-            height: 100%;
-            overflow-y: auto;
-        }
-
-        /* Enhanced Navigation */
-        .nav-section {
-            margin-bottom: 30px;
-        }
-
-        .nav-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--neon-cyan);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding: 0 20px;
-            margin-bottom: 15px;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar.collapsed .nav-title {
-            opacity: 0;
-        }
-
-        .nav-item {
-            position: relative;
-            margin-bottom: 8px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-            transition: width 0.3s ease;
-            z-index: -1;
-        }
-
-        .nav-link:hover::before,
-        .nav-link.active::before {
-            width: 100%;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            color: var(--text-primary);
-            border-left-color: var(--neon-cyan);
-            text-shadow: 0 0 10px var(--neon-cyan);
-        }
-
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            margin-right: 15px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .nav-text {
-            opacity: 1;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .sidebar.collapsed .nav-text {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .sidebar.collapsed + .main-content {
-            margin-left: 80px;
-        }
-
-        /* Top Toolbar */
-        .toolbar {
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border-bottom: 2px solid var(--neon-purple);
-            padding: 15px 25px;
+        /* Header Styles */
+        .header {
+            background-color: var(--primary-blue);
+            color: var(--text-light);
+            padding: 1rem 2rem;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
-            z-index: 999;
+            z-index: 1000;
         }
 
-        .toolbar-section {
+        .logo {
             display: flex;
             align-items: center;
             gap: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
         }
 
-        .toolbar-section.actions {
-            margin-left: auto;
-        }
-
-        /* Cyber Buttons */
-        .cyber-btn {
-            background: transparent;
-            border: 2px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 10px 16px;
+        .logo-icon {
+            background-color: var(--secondary-blue);
+            color: white;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cyber-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-            transition: left 0.5s ease;
-            z-index: -1;
-        }
-
-        .cyber-btn:hover::before {
-            left: 100%;
-        }
-
-        .cyber-btn:hover {
-            color: var(--bg-primary);
-            background: var(--neon-cyan);
-            box-shadow: var(--shadow-neon) var(--neon-cyan);
-            transform: translateY(-2px);
-        }
-
-        .cyber-btn.active {
-            background: var(--neon-cyan);
-            color: var(--bg-primary);
-            box-shadow: var(--shadow-neon) var(--neon-cyan);
-        }
-
-        .cyber-btn-primary {
-            border-color: var(--neon-magenta);
-            color: var(--neon-magenta);
-        }
-
-        .cyber-btn-primary:hover,
-        .cyber-btn-primary.active {
-            background: var(--neon-magenta);
-            box-shadow: var(--shadow-neon) var(--neon-magenta);
-        }
-
-        /* Enhanced Canvas Area */
-        .canvas-container {
-            flex: 1;
-            display: flex;
-            background: var(--bg-secondary);
-            position: relative;
-        }
-
-        .pdf-canvas {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            position: relative;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
         }
 
-        .pdf-page {
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-blue);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+        }
+
+        /* Main Editor Layout */
+        .editor-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-blue);
+            color: var(--text-light);
+            padding: 1rem;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary-blue);
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--secondary-blue);
+            color: white;
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-light);
+        }
+
+        /* Toolbar Styles */
+        .toolbar {
+            background-color: white;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-right: 15px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            margin-left: auto;
+        }
+
+        .tool-btn {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.5rem 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .tool-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .tool-btn.active {
+            background-color: var(--secondary-blue);
+            color: white;
+            border-color: var(--secondary-blue);
+        }
+
+        .tool-btn i {
+            font-size: 0.9rem;
+        }
+
+        /* PDF Viewer Area */
+        .pdf-viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            overflow: auto;
+            background-color: #f0f2f5;
+        }
+
+        .pdf-page-container {
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            position: relative;
             max-width: 100%;
-            max-height: 100%;
-            background: white;
-            border: 2px solid var(--neon-purple);
-            border-radius: 12px;
-            box-shadow: 
-                var(--shadow-neon) var(--neon-purple),
-                inset 0 0 20px rgba(138, 43, 226, 0.1);
-            position: relative;
-            min-height: 600px;
-            min-width: 450px;
-            overflow: hidden;
         }
 
-        /* PDF Page Tools Overlay */
-        .page-tools-overlay {
+        .pdf-page-tools {
             position: absolute;
             top: 10px;
             right: 10px;
             display: flex;
-            gap: 10px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .pdf-page:hover .page-tools-overlay {
-            opacity: 1;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .page-tool-btn {
-            width: 32px;
-            height: 32px;
-            background: var(--bg-panel);
-            border: 1px solid var(--neon-cyan);
-            border-radius: 6px;
-            color: var(--neon-cyan);
-            cursor: pointer;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            transition: all 0.3s ease;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .page-tool-btn:hover {
-            background: var(--neon-cyan);
-            color: var(--bg-primary);
-            box-shadow: 0 0 10px var(--neon-cyan);
+            background-color: #f0f0f0;
+        }
+
+        .pdf-canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .pdf-placeholder {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        /* Page Navigation */
+        .page-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 1rem;
+        }
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-weight: 600;
         }
 
         /* Modal Styles */
@@ -396,15 +334,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 15, 0.9);
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .modal.active {
@@ -413,527 +350,527 @@
         }
 
         .modal-content {
-            background: var(--bg-panel);
-            backdrop-filter: blur(20px);
-            border: 2px solid var(--neon-magenta);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 600px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             width: 90%;
+            max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-neon) var(--neon-magenta);
         }
 
         .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--neon-magenta);
         }
 
         .modal-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--neon-magenta);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--primary-blue);
         }
 
         .modal-close {
-            background: transparent;
+            background: none;
             border: none;
-            color: var(--neon-magenta);
-            font-size: 24px;
+            font-size: 1.2rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            color: #666;
         }
 
-        .modal-close:hover {
-            color: var(--text-primary);
-            text-shadow: 0 0 10px var(--neon-magenta);
+        .modal-body {
+            padding: 1.5rem;
         }
 
-        /* Form Elements */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1rem;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 14px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
         }
 
         .form-input {
             width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--neon-cyan);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 14px;
-            transition: all 0.3s ease;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Open Sans', sans-serif;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--neon-magenta);
-            box-shadow: var(--border-glow) var(--neon-magenta);
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
 
         .form-checkbox {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 0.8rem;
         }
 
         .checkbox {
             width: 18px;
             height: 18px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--neon-cyan);
+            border: 1px solid #e0e0e0;
             border-radius: 4px;
             cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox.checked {
-            background: var(--neon-cyan);
-            box-shadow: var(--border-glow) var(--neon-cyan);
-        }
-
-        .checkbox.checked::before {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--bg-primary);
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        /* Button Groups */
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 30px;
-        }
-
-        /* Header/Footer Dialog Specific */
-        .dialog-tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--bg-secondary);
-        }
-
-        .dialog-tab {
-            flex: 1;
-            padding: 12px 20px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .dialog-tab.active {
-            color: var(--neon-cyan);
-        }
-
-        .dialog-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--neon-cyan);
-            box-shadow: var(--border-glow) var(--neon-cyan);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .content-type-selector {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .type-option {
-            flex: 1;
-            padding: 15px;
-            background: var(--bg-secondary);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .type-option.active {
-            border-color: var(--neon-cyan);
-            box-shadow: var(--border-glow) var(--neon-cyan);
-        }
-
-        /* Image Preview */
-        .image-preview {
-            width: 100%;
-            height: 150px;
-            background: var(--bg-secondary);
-            border: 2px dashed var(--neon-cyan);
-            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            overflow: hidden;
-            position: relative;
         }
 
-        .image-preview img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        .checkbox.checked {
+            background-color: var(--secondary-blue);
+            border-color: var(--secondary-blue);
+            color: white;
         }
 
-        .upload-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-
-        /* Page Number Options */
-        .page-number-options {
+        .button-group {
             display: flex;
-            gap: 15px;
-            margin-top: 20px;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 1.5rem;
         }
 
-        .page-number-select {
-            flex: 2;
+        .btn {
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .page-number-start {
-            flex: 1;
+        .btn-primary {
+            background-color: var(--secondary-blue);
+            color: white;
         }
-        /* ensure the overlay buttons are properly spaced */
-.page-tools-overlay {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    padding: 8px;
-    background: rgba(26, 26, 46, 0.8);
-    border-radius: 8px;
-}
 
-.page-counter {
-    color: var(--text-primary);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    padding: 0 10px;
-    min-width: 80px;
-    text-align: center;
-}
+        .btn-primary:hover {
+            background-color: var(--accent-blue);
+        }
 
-        /* Mobile Responsive */
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+        }
+
+        /* Find & Replace Modal Specific */
+        .search-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: var(--primary-blue);
+            color: var(--text-light);
+            padding: 1rem 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: var(--dark-blue);
+            color: var(--text-light);
+        }
+
+        body.dark-mode .main-content {
+            background-color: var(--dark-blue);
+        }
+
+        body.dark-mode .toolbar {
+            background-color: var(--primary-blue);
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .tool-btn {
+            background-color: var(--primary-blue);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        body.dark-mode .tool-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .tool-btn.active {
+            background-color: var(--secondary-blue);
+        }
+
+        body.dark-mode .pdf-viewer {
+            background-color: var(--dark-blue);
+        }
+
+        body.dark-mode .pdf-page-container {
+            background-color: var(--primary-blue);
+        }
+
+        body.dark-mode .modal-content {
+            background-color: var(--primary-blue);
+            color: var(--text-light);
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .modal-title {
+            color: var(--text-light);
+        }
+
+        body.dark-mode .form-input {
+            background-color: var(--dark-blue);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        body.dark-mode .form-input:focus {
+            border-color: var(--secondary-blue);
+        }
+
+        body.dark-mode .form-label {
+            color: var(--text-light);
+        }
+
+        body.dark-mode .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive Styles */
         @media (max-width: 768px) {
             .sidebar {
-                transform: translateX(-100%);
-                width: 100%;
+                position: fixed;
+                top: 0;
+                left: -280px;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s ease;
             }
-            
-            .sidebar.mobile-expanded {
-                transform: translateX(0);
+
+            .sidebar.active {
+                left: 0;
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
-            
+
             .toolbar {
-                padding: 10px 15px;
-                gap: 10px;
-            }
-            
-            .cyber-btn {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            
-            .modal-content {
-                padding: 20px;
-                margin: 20px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .dialog-tabs {
-                flex-direction: column;
-            }
-            
-            .content-type-selector {
-                flex-direction: column;
+                padding: 0.8rem;
             }
 
-            .pdf-page {
-                min-width: 100%;
-                min-height: 400px;
+            .toolbar-group {
+                padding-right: 0;
+                border-right: none;
             }
-            .page-tools-overlay {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    .page-counter {
-        padding: 5px 0;
-    }
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--secondary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
         }
 
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
+        .fab:hover {
+            background-color: var(--accent-blue);
+            transform: translateY(-3px);
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: var(--neon-cyan);
-            border-radius: 4px;
-            box-shadow: 0 0 10px var(--neon-cyan);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--neon-magenta);
-            box-shadow: 0 0 15px var(--neon-magenta);
+        .fab i {
+            font-size: 1.5rem;
         }
     </style>
 </head>
 <body>
-    <div class="editor-container">
-        <!-- Enhanced Sidebar -->
-        <nav class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <span>Textro PdfCraft</span>
+        </div>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-link active">
+                <i class="fas fa-edit"></i>
+                <span>Editor</span>
+            </a>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
             </button>
-            
-            <div class="sidebar-content">
-                <!-- File Management -->
-                <div class="nav-section">
-                    <div class="nav-title">File</div>
-                    <div class="nav-item">
-                        <div class="nav-link active">
-                            <div class="nav-icon"><i class="fas fa-file-pdf"></i></div>
-                            <span class="nav-text">Current PDF</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link">
-                            <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
-                            <span class="nav-text">File Manager</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link">
-                            <div class="nav-icon"><i class="fas fa-star"></i></div>
-                            <span class="nav-text">Favorites</span>
-                        </div>
-                    </div>
-                </div>
+        </nav>
+    </header>
 
-                <!-- Page Tools -->
-                <div class="nav-section">
-                    <div class="nav-title">Pages</div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="addPage()">
-                            <div class="nav-icon"><i class="fas fa-plus-circle"></i></div>
-                            <span class="nav-text">Add Page</span>
-                        </div>
+    <!-- Main Editor Container -->
+    <div class="editor-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">File</h3>
+                <div class="sidebar-item active">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-file-pdf"></i>
                     </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="rotatePage()">
-                            <div class="nav-icon"><i class="fas fa-redo-alt"></i></div>
-                            <span class="nav-text">Rotate Page</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="mergePDF()">
-                            <div class="nav-icon"><i class="fas fa-object-group"></i></div>
-                            <span class="nav-text">Merge PDF</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="splitPDF()">
-                            <div class="nav-icon"><i class="fas fa-cut"></i></div>
-                            <span class="nav-text">Split PDF</span>
-                        </div>
-                    </div>
+                    <span>Current Document</span>
                 </div>
-
-                <!-- Enhanced Tools -->
-                <div class="nav-section">
-                    <div class="nav-title">Tools</div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="openFindReplaceModal()">
-                            <div class="nav-icon"><i class="fas fa-magnifying-glass"></i></div>
-                            <span class="nav-text">Find & Replace</span>
-                        </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-folder-open"></i>
                     </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="openHeaderModal()">
-                            <div class="nav-icon"><i class="fas fa-heading"></i></div>
-                            <span class="nav-text">Header</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="openFooterModal()">
-                            <div class="nav-icon"><i class="fas fa-align-justify"></i></div>
-                            <span class="nav-text">Footer</span>
-                        </div>
-                    </div>
+                    <span>Open File</span>
                 </div>
-
-                <!-- AI Tools -->
-                <div class="nav-section">
-                    <div class="nav-title">AI Tools</div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="ocrTool()">
-                            <div class="nav-icon"><i class="fas fa-scanner"></i></div>
-                            <span class="nav-text">OCR Scan</span>
-                        </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-save"></i>
                     </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="aiSummarizer()">
-                            <div class="nav-icon"><i class="fas fa-brain"></i></div>
-                            <span class="nav-text">AI Summarizer</span>
-                        </div>
-                    </div>
-                    <div class="nav-item">
-                        <div class="nav-link" onclick="voiceNotes()">
-                            <div class="nav-icon"><i class="fas fa-microphone"></i></div>
-                            <span class="nav-text">Voice Notes</span>
-                        </div>
-                    </div>
+                    <span>Save As</span>
                 </div>
             </div>
-        </nav>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Pages</h3>
+                <div class="sidebar-item" onclick="addPage()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <span>Add Page</span>
+                </div>
+                <div class="sidebar-item" onclick="deletePage()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <span>Delete Page</span>
+                </div>
+                <div class="sidebar-item" onclick="rotatePage()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-redo"></i>
+                    </div>
+                    <span>Rotate Page</span>
+                </div>
+                <div class="sidebar-item" onclick="mergePDF()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-object-group"></i>
+                    </div>
+                    <span>Merge PDF</span>
+                </div>
+                <div class="sidebar-item" onclick="splitPDF()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-cut"></i>
+                    </div>
+                    <span>Split PDF</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Tools</h3>
+                <div class="sidebar-item" onclick="openFindReplaceModal()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <span>Find & Replace</span>
+                </div>
+                <div class="sidebar-item" onclick="addText()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-font"></i>
+                    </div>
+                    <span>Add Text</span>
+                </div>
+                <div class="sidebar-item" onclick="addImage()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <span>Add Image</span>
+                </div>
+                <div class="sidebar-item" onclick="addSignature()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                    <span>Add Signature</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Format</h3>
+                <div class="sidebar-item" onclick="openHeaderModal()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-heading"></i>
+                    </div>
+                    <span>Header</span>
+                </div>
+                <div class="sidebar-item" onclick="openFooterModal()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-align-justify"></i>
+                    </div>
+                    <span>Footer</span>
+                </div>
+                <div class="sidebar-item" onclick="compressPDF()">
+                    <div class="sidebar-icon">
+                        <i class="fas fa-compress"></i>
+                    </div>
+                    <span>Compress</span>
+                </div>
+            </div>
+        </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Toolbar -->
+            <!-- Toolbar -->
             <div class="toolbar">
-                <!-- Text Tools -->
-                <div class="toolbar-section">
-                    <button class="cyber-btn" onclick="addText()">
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="undo()">
+                        <i class="fas fa-undo"></i>
+                        <span>Undo</span>
+                    </button>
+                    <button class="tool-btn" onclick="redo()">
+                        <i class="fas fa-redo"></i>
+                        <span>Redo</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i>
+                        <span>Zoom In</span>
+                    </button>
+                    <button class="tool-btn" onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i>
+                        <span>Zoom Out</span>
+                    </button>
+                    <button class="tool-btn" onclick="fitToWidth()">
+                        <i class="fas fa-arrows-alt-h"></i>
+                        <span>Fit Width</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn active" id="textToolBtn" onclick="activateTextTool()">
                         <i class="fas fa-font"></i>
                         <span>Text</span>
                     </button>
-                </div>
-
-                <!-- Annotation Tools -->
-                <div class="toolbar-section">
-                    <button class="cyber-btn" onclick="activateHighlight()">
+                    <button class="tool-btn" id="highlightToolBtn" onclick="activateHighlightTool()">
                         <i class="fas fa-highlighter"></i>
                         <span>Highlight</span>
                     </button>
-                    <button class="cyber-btn" onclick="activateDraw()">
+                    <button class="tool-btn" id="drawToolBtn" onclick="activateDrawTool()">
                         <i class="fas fa-pencil-alt"></i>
                         <span>Draw</span>
                     </button>
-                    <button class="cyber-btn" onclick="addStickyNote()">
-                        <i class="fas fa-sticky-note"></i>
-                        <span>Note</span>
-                    </button>
-                    <button class="cyber-btn" onclick="openSignatureModal()">
-                        <i class="fas fa-signature"></i>
-                        <span>Sign</span>
-                    </button>
                 </div>
 
-                <!-- Insert Tools -->
-                <div class="toolbar-section">
-                    <button class="cyber-btn" onclick="insertImage()">
-                        <i class="fas fa-image"></i>
-                        <span>Image</span>
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="downloadPDF()">
+                        <i class="fas fa-download"></i>
+                        <span>Download</span>
                     </button>
-                    <button class="cyber-btn" onclick="insertQR()">
-                        <i class="fas fa-qrcode"></i>
-                        <span>QR Code</span>
-                    </button>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="toolbar-section actions">
-                    <button class="cyber-btn" onclick="undo()">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                    <button class="cyber-btn" onclick="redo()">
-                        <i class="fas fa-redo"></i>
-                    </button>
-                    <button class="cyber-btn cyber-btn-primary" onclick="savePDF()">
+                    <button class="tool-btn btn-primary" onclick="savePDF()">
                         <i class="fas fa-save"></i>
                         <span>Save</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Enhanced Canvas Area -->
-            <div class="canvas-container">
-                <div class="pdf-canvas">
-                    <div class="pdf-page" id="pdfPage">
-                        <div class="page-tools-overlay">
-                            <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
-                            <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
-                            <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-                            <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
-                        </div>
-                        <!-- PDF content would be rendered here -->
-                        <div style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
-                            PDF Page Content
-                            <br><br>
-                            <small>Click on tools to edit this page</small>
-                        </div>
+            <!-- PDF Viewer -->
+            <div class="pdf-viewer">
+                <div class="pdf-page-container">
+                    <div class="pdf-page-tools">
+                        <button class="page-tool-btn" title="Zoom In" onclick="zoomIn()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="page-tool-btn" title="Zoom Out" onclick="zoomOut()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="page-tool-btn" title="Fit Width" onclick="fitToWidth()">
+                            <i class="fas fa-arrows-alt-h"></i>
+                        </button>
                     </div>
+                    
+                    <!-- PDF Display -->
+                    <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
+                    <img id="pdfImage" class="pdf-canvas" style="display: none;">
+                    
+                    <!-- Placeholder when no PDF is loaded -->
+                    <div id="pdfPlaceholder" class="pdf-placeholder">
+                        <i class="fas fa-file-pdf" style="font-size: 3rem; color: #bdc3c7; margin-bottom: 1rem;"></i>
+                        <h3>No PDF Loaded</h3>
+                        <p>Upload a PDF file to begin editing</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-upload"></i> Upload PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Page Navigation -->
+                <div class="page-navigation">
+                    <button class="page-btn" id="prevPageBtn" onclick="previousPage()" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="page-btn" id="nextPageBtn" onclick="nextPage()" disabled>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Floating Action Button -->
+    <div class="fab" title="Upload PDF" onclick="document.getElementById('fileInput').click()">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Textro PdfCraft. All rights reserved.</p>
+    </footer>
+
     <!-- Find & Replace Modal -->
     <div class="modal" id="findReplaceModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Find & Replace</h2>
+                <h3 class="modal-title">Find & Replace</h3>
                 <button class="modal-close" onclick="closeFindReplaceModal()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -947,23 +884,27 @@
                     <label class="form-label">Replace with:</label>
                     <input type="text" class="form-input" id="replaceText" placeholder="Enter replacement text">
                 </div>
-                <div class="form-checkbox">
-                    <div class="checkbox" onclick="toggleCheckbox(this)" id="matchCase"></div>
-                    <label>Match case</label>
+                
+                <div class="search-options">
+                    <div class="form-checkbox">
+                        <div class="checkbox" id="matchCaseCheckbox" onclick="toggleCheckbox(this)"></div>
+                        <label>Match case</label>
+                    </div>
+                    <div class="form-checkbox">
+                        <div class="checkbox" id="wholeWordCheckbox" onclick="toggleCheckbox(this)"></div>
+                        <label>Whole word</label>
+                    </div>
+                    <div class="form-checkbox">
+                        <div class="checkbox" id="regexCheckbox" onclick="toggleCheckbox(this)"></div>
+                        <label>Use regular expression</label>
+                    </div>
                 </div>
-                <div class="form-checkbox">
-                    <div class="checkbox" onclick="toggleCheckbox(this)" id="wholeWord"></div>
-                    <label>Whole word</label>
-                </div>
-                <div class="form-checkbox">
-                    <div class="checkbox" onclick="toggleCheckbox(this)" id="useRegex"></div>
-                    <label>Use regex</label>
-                </div>
+                
                 <div class="button-group">
-                    <button class="cyber-btn" onclick="findNext()">Find Next</button>
-                    <button class="cyber-btn" onclick="replaceText()">Replace</button>
-                    <button class="cyber-btn cyber-btn-primary" onclick="replaceAll()">Replace All</button>
-                    <button class="cyber-btn" onclick="closeFindReplaceModal()">Cancel</button>
+                    <button class="btn btn-secondary" onclick="closeFindReplaceModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="findNext()">Find Next</button>
+                    <button class="btn btn-primary" onclick="replaceText()">Replace</button>
+                    <button class="btn btn-primary" onclick="replaceAll()">Replace All</button>
                 </div>
             </div>
         </div>
@@ -973,216 +914,44 @@
     <div class="modal" id="headerModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Header Settings</h2>
+                <h3 class="modal-title">Header Settings</h3>
                 <button class="modal-close" onclick="closeHeaderModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="dialog-tabs">
-                    <button class="dialog-tab active" onclick="switchTab(this, 'leftHeaderTab')">Left Header</button>
-                    <button class="dialog-tab" onclick="switchTab(this, 'centerHeaderTab')">Center Header</button>
-                    <button class="dialog-tab" onclick="switchTab(this, 'rightHeaderTab')">Right Header</button>
+                <div class="form-group">
+                    <label class="form-label">Header Text:</label>
+                    <input type="text" class="form-input" id="headerText" placeholder="Enter header text">
                 </div>
-
-                <!-- Left Header Tab -->
-                <div id="leftHeaderTab" class="tab-content active">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'leftHeaderText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'leftHeaderImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="leftHeaderText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="leftHeaderTextInput" placeholder="Enter header text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="leftHeaderFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="leftHeaderSize" value="12" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="leftHeaderColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="leftHeaderImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="leftHeaderImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="leftHeaderImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="leftHeaderImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="leftHeaderImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Font:</label>
+                    <select class="form-input" id="headerFont">
+                        <option>Arial</option>
+                        <option>Times New Roman</option>
+                        <option>Courier New</option>
+                        <option>Verdana</option>
+                    </select>
                 </div>
-
-                <!-- Center Header Tab -->
-                <div id="centerHeaderTab" class="tab-content" style="display:none;">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'centerHeaderText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'centerHeaderImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="centerHeaderText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="centerHeaderTextInput" placeholder="Enter header text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="centerHeaderFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="centerHeaderSize" value="12" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="centerHeaderColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="centerHeaderImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="centerHeaderImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="centerHeaderImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="centerHeaderImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="centerHeaderImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Font Size:</label>
+                    <input type="number" class="form-input" id="headerFontSize" min="8" max="72" value="12">
                 </div>
-
-                <!-- Right Header Tab -->
-                <div id="rightHeaderTab" class="tab-content" style="display:none;">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'rightHeaderText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'rightHeaderImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="rightHeaderText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Header Text:</label>
-                            <input type="text" class="form-input" id="rightHeaderTextInput" placeholder="Enter header text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="rightHeaderFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="rightHeaderSize" value="12" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="rightHeaderColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="rightHeaderImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="rightHeaderImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="rightHeaderImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="rightHeaderImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="rightHeaderImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Color:</label>
+                    <input type="color" class="form-input" id="headerColor" value="#000000">
                 </div>
-
+                <div class="form-group">
+                    <label class="form-label">Alignment:</label>
+                    <select class="form-input" id="headerAlignment">
+                        <option>Left</option>
+                        <option>Center</option>
+                        <option>Right</option>
+                    </select>
+                </div>
                 <div class="button-group">
-                    <button class="cyber-btn" onclick="closeHeaderModal()">Cancel</button>
-                    <button class="cyber-btn cyber-btn-primary" onclick="applyHeaderSettings()">Apply</button>
+                    <button class="btn btn-secondary" onclick="closeHeaderModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="applyHeaderSettings()">Apply</button>
                 </div>
             </div>
         </div>
@@ -1192,825 +961,362 @@
     <div class="modal" id="footerModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Footer Settings</h2>
+                <h3 class="modal-title">Footer Settings</h3>
                 <button class="modal-close" onclick="closeFooterModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="dialog-tabs">
-                    <button class="dialog-tab active" onclick="switchTab(this, 'leftFooterTab')">Left Footer</button>
-                    <button class="dialog-tab" onclick="switchTab(this, 'centerFooterTab')">Center Footer</button>
-                    <button class="dialog-tab" onclick="switchTab(this, 'rightFooterTab')">Right Footer</button>
+                <div class="form-group">
+                    <label class="form-label">Footer Text:</label>
+                    <input type="text" class="form-input" id="footerText" placeholder="Enter footer text">
                 </div>
-
-                <!-- Left Footer Tab -->
-                <div id="leftFooterTab" class="tab-content active">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'leftFooterText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'leftFooterImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="leftFooterText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="leftFooterTextInput" placeholder="Enter footer text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="leftFooterFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="leftFooterSize" value="10" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="leftFooterColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="leftFooterImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="leftFooterImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="leftFooterImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="leftFooterImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="leftFooterImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-checkbox">
-                        <div class="checkbox" onclick="toggleCheckbox(this)" id="leftFooterPageNumber"></div>
-                        <label>Add Page Number</label>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Font:</label>
+                    <select class="form-input" id="footerFont">
+                        <option>Arial</option>
+                        <option>Times New Roman</option>
+                        <option>Courier New</option>
+                        <option>Verdana</option>
+                    </select>
                 </div>
-
-                <!-- Center Footer Tab -->
-                <div id="centerFooterTab" class="tab-content" style="display:none;">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'centerFooterText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'centerFooterImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="centerFooterText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="centerFooterTextInput" placeholder="Enter footer text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="centerFooterFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="centerFooterSize" value="10" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="centerFooterColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="centerFooterImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="centerFooterImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="centerFooterImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="centerFooterImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="centerFooterImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-checkbox">
-                        <div class="checkbox" onclick="toggleCheckbox(this)" id="centerFooterPageNumber"></div>
-                        <label>Add Page Number</label>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Font Size:</label>
+                    <input type="number" class="form-input" id="footerFontSize" min="8" max="72" value="10">
                 </div>
-
-                <!-- Right Footer Tab -->
-                <div id="rightFooterTab" class="tab-content" style="display:none;">
-                    <div class="content-type-selector">
-                        <div class="type-option active" onclick="selectContentType(this, 'rightFooterText')">
-                            <i class="fas fa-font"></i>
-                            <span>Text</span>
-                        </div>
-                        <div class="type-option" onclick="selectContentType(this, 'rightFooterImage')">
-                            <i class="fas fa-image"></i>
-                            <span>Image</span>
-                        </div>
-                    </div>
-
-                    <div id="rightFooterText" class="content-type-content">
-                        <div class="form-group">
-                            <label class="form-label">Footer Text:</label>
-                            <input type="text" class="form-input" id="rightFooterTextInput" placeholder="Enter footer text">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Font:</label>
-                            <select class="form-input" id="rightFooterFont">
-                                <option>Arial</option>
-                                <option>Times New Roman</option>
-                                <option>Courier New</option>
-                                <option>Orbitron</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <input type="number" class="form-input" id="rightFooterSize" value="10" min="8" max="72">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Color:</label>
-                            <input type="color" class="form-input" id="rightFooterColor" value="#ffffff">
-                        </div>
-                    </div>
-
-                    <div id="rightFooterImage" class="content-type-content" style="display:none;">
-                        <div class="image-preview" id="rightFooterImagePreview">
-                            <div class="upload-btn">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Click to upload image</p>
-                                <input type="file" id="rightFooterImageUpload" style="display:none;" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alignment:</label>
-                            <select class="form-input" id="rightFooterImageAlign">
-                                <option>Left</option>
-                                <option>Center</option>
-                                <option>Right</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Size:</label>
-                            <select class="form-input" id="rightFooterImageSize">
-                                <option>Small</option>
-                                <option>Medium</option>
-                                <option>Large</option>
-                                <option>Original</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-checkbox">
-                        <div class="checkbox" onclick="toggleCheckbox(this)" id="rightFooterPageNumber"></div>
-                        <label>Add Page Number</label>
-                    </div>
-
-                    <div class="page-number-options" style="display:none;" id="pageNumberOptions">
-                        <div class="form-group page-number-select">
-                            <label class="form-label">Format:</label>
-                            <select class="form-input" id="pageNumberFormat">
-                                <option>1</option>
-                                <option>Page 1</option>
-                                <option>1 of 10</option>
-                                <option>Page 1 of 10</option>
-                            </select>
-                        </div>
-                        <div class="form-group page-number-start">
-                            <label class="form-label">Start at:</label>
-                            <input type="number" class="form-input" id="pageNumberStart" value="1" min="1">
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Color:</label>
+                    <input type="color" class="form-input" id="footerColor" value="#000000">
                 </div>
-
+                <div class="form-group">
+                    <label class="form-label">Alignment:</label>
+                    <select class="form-input" id="footerAlignment">
+                        <option>Left</option>
+                        <option>Center</option>
+                        <option>Right</option>
+                    </select>
+                </div>
+                <div class="form-checkbox">
+                    <div class="checkbox" id="pageNumbersCheckbox" onclick="toggleCheckbox(this)"></div>
+                    <label>Include page numbers</label>
+                </div>
                 <div class="button-group">
-                    <button class="cyber-btn" onclick="closeFooterModal()">Cancel</button>
-                    <button class="cyber-btn cyber-btn-primary" onclick="applyFooterSettings()">Apply</button>
+                    <button class="btn btn-secondary" onclick="closeFooterModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="applyFooterSettings()">Apply</button>
                 </div>
             </div>
         </div>
     </div>
-
     <script>
-    // Handle file upload from the upload button
-    document.querySelectorAll('.input-div').forEach(div => {
-        div.addEventListener('click', function(e) {
-            if (e.target.classList.contains('input')) return;
-            this.querySelector('input').click();
-        });
-    });
-
-    // Handle file selection
-    document.querySelectorAll('.input').forEach(input => {
-        input.addEventListener('change', function(e) {
-            const files = e.target.files;
-            if (files.length > 0) {
-                // Check if it's a PDF
-                if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                    // Store the file in localStorage temporarily
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        localStorage.setItem('currentPdf', event.target.result);
-                        // Redirect to editor
-                        window.location.href = 'editor.html';
-                    };
-                    reader.readAsDataURL(files[0]);
-                } else {
-                    alert('Please upload a PDF file');
-                }
+        // Global variables
+        let pdfDoc = null;
+        let currentPage = 1;
+        let pageCount = 1;
+        let zoomLevel = 1.0;
+        let sessionId = null;
+        let activeTool = 'text';
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check URL for session ID
+            const urlParams = new URLSearchParams(window.location.search);
+            sessionId = urlParams.get('sessionId');
+            
+            // Initialize theme
+            initTheme();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // If we have a session ID, load the PDF
+            if (sessionId) {
+                loadPDF(`/api/pdf/${sessionId}`);
             }
         });
-    });
 
-    // Add drag and drop functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const uploadAreas = document.querySelectorAll('.main-card');
-
-        uploadAreas.forEach(area => {
-            area.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('border-purple-400');
+ 
+        
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // File input change
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+            
+            // Mobile menu toggle (for smaller screens)
+            const mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileMenuBtn.style.position = 'fixed';
+            mobileMenuBtn.style.top = '15px';
+            mobileMenuBtn.style.left = '15px';
+            mobileMenuBtn.style.zIndex = '1001';
+            mobileMenuBtn.style.background = 'var(--secondary-blue)';
+            mobileMenuBtn.style.color = 'white';
+            mobileMenuBtn.style.border = 'none';
+            mobileMenuBtn.style.borderRadius = '50%';
+            mobileMenuBtn.style.width = '40px';
+            mobileMenuBtn.style.height = '40px';
+            mobileMenuBtn.style.display = 'none';
+            mobileMenuBtn.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('active');
             });
-
-            area.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                this.classList.remove('border-purple-400');
-            });
-
-            area.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('border-purple-400');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    // Check if it's a PDF
-                    if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                        // Store the file in localStorage temporarily
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            localStorage.setItem('currentPdf', event.target.result);
-                            // Redirect to editor
-                            window.location.href = 'editor.html';
-                        };
-                        reader.readAsDataURL(files[0]);
-                    } else {
-                        alert('Please upload a PDF file');
-                    }
+            document.body.appendChild(mobileMenuBtn);
+            
+            // Show/hide mobile menu button based on screen size
+            function handleResize() {
+                if (window.innerWidth <= 768) {
+                    mobileMenuBtn.style.display = 'flex';
+                    mobileMenuBtn.style.alignItems = 'center';
+                    mobileMenuBtn.style.justifyContent = 'center';
+                } else {
+                    mobileMenuBtn.style.display = 'none';
+                    document.getElementById('sidebar').classList.remove('active');
                 }
-            });
-        });
-    });
-
-    // PDF Viewer and Editor Functions
-    let currentPage = 1;
-    let totalPages = 1;
-    let pdfDoc = null;
-    let scale = 1.0;
-    const scaleStep = 0.25;
-
-    // Function to render PDF page
-    function renderPage(pageNum) {
-        pdfDoc.getPage(pageNum).then(function(page) {
-            const viewport = page.getViewport({ scale: scale });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            const pdfPage = document.getElementById('pdfPage');
+            }
             
-            // Clear previous content
-            pdfPage.innerHTML = '';
-            
-            // Set canvas dimensions
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            // Append canvas to page container
-            pdfPage.appendChild(canvas);
-            
-            // Add page tools overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'page-tools-overlay';
-           // In the renderPage function, update the overlay HTML:
-overlay.innerHTML = `
-    <button class="page-tool-btn" title="Add Page Left" onclick="addPageLeft()"><i class="fas fa-plus-square"></i></button>
-    <button class="page-tool-btn" title="Delete Page" onclick="deletePage()"><i class="fas fa-trash-alt"></i></button>
-    <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
-    <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
-    <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-    <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
-    <button class="page-tool-btn" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
-    <span class="page-counter">${currentPage} / ${totalPages}</span>
-    <button class="page-tool-btn" title="Next Page"><i class="fas fa-chevron-right"></i></button>
-`;
-            pdfPage.appendChild(overlay);
-            
-            // Add event listeners to page tools
-            // In the renderPage function, update the overlay HTML:
-
-            overlay.querySelector('[title="Zoom In"]').addEventListener('click', zoomIn);
-            overlay.querySelector('[title="Zoom Out"]').addEventListener('click', zoomOut);
-            overlay.querySelector('[title="Fit Width"]').addEventListener('click', fitWidth);
-            overlay.querySelector('[title="Fit Page"]').addEventListener('click', fitPage);
-            overlay.querySelector('[title="Previous Page"]').addEventListener('click', prevPage);
-            overlay.querySelector('[title="Next Page"]').addEventListener('click', nextPage);
-            
-            // Render PDF page into canvas context
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            
-            page.render(renderContext);
-        });
-    }
-
-    // Navigation functions
-    function nextPage() {
-        if (currentPage >= totalPages) return;
-        currentPage++;
-        renderPage(currentPage);
-    }
-
-    function prevPage() {
-        if (currentPage <= 1) return;
-        currentPage--;
-        renderPage(currentPage);
-    }
-
-    // Zoom functions
-    function zoomIn() {
-        scale += scaleStep;
-        renderPage(currentPage);
-    }
-
-    function zoomOut() {
-        if (scale <= scaleStep) return;
-        scale -= scaleStep;
-        renderPage(currentPage);
-    }
-
-    function fitWidth() {
-        const container = document.getElementById('pdfPage');
-        pdfDoc.getPage(currentPage).then(function(page) {
-            const viewport = page.getViewport({ scale: 1.0 });
-            scale = container.clientWidth / viewport.width;
-            renderPage(currentPage);
-        });
-    }
-
-    function fitPage() {
-        const container = document.getElementById('pdfPage');
-        pdfDoc.getPage(currentPage).then(function(page) {
-            const viewport = page.getViewport({ scale: 1.0 });
-            const scaleX = container.clientWidth / viewport.width;
-            const scaleY = container.clientHeight / viewport.height;
-            scale = Math.min(scaleX, scaleY);
-            renderPage(currentPage);
-        });
-    }
-
-    // Load PDF document
-    function loadPdf(pdfData) {
-        // Initialize PDF.js
-        pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        }
         
-        // Remove data URL prefix if present
-        const base64Data = pdfData.replace(/^data:application\/pdf;base64,/, '');
+        // Toggle between light and dark themes
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            
+            const themeIcon = document.getElementById('themeToggle').querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        }
         
-        // Load the PDF
-        const loadingTask = pdfjsLib.getDocument({ data: atob(base64Data) });
-        loadingTask.promise.then(function(pdf) {
-            pdfDoc = pdf;
-            totalPages = pdf.numPages;
-            currentPage = 1;
-            
-            // Render the first page
-            renderPage(currentPage);
-            
-            // Update the "Current PDF" nav item with the filename
-            const pdfNavItem = document.querySelector('.nav-item .nav-link.active');
-            const fileName = 'document.pdf'; // You can extract this from the data URL if needed
-            pdfNavItem.querySelector('.nav-text').textContent = fileName.length > 20 
-                ? fileName.substring(0, 20) + '...' 
-                : fileName;
-        }).catch(function(error) {
-            console.error('PDF loading error:', error);
-            alert('Error loading PDF. Please try another file.');
-        });
-    }
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+                        // Check file type
+            if (file.type !== 'application/pdf') {
+                showAlert('Please select a PDF file', 'error');
+                return;
+            }
 
-    // Check for PDF in localStorage when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        const pdfData = localStorage.getItem('currentPdf');
-        if (pdfData) {
-            loadPdf(pdfData);
-        } else {
-            // Show default content if no PDF is loaded
-            document.getElementById('pdfPage').innerHTML = `
-                <div class="page-tools-overlay">
-                    <button class="page-tool-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
-                    <button class="page-tool-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
-                    <button class="page-tool-btn" title="Fit Width"><i class="fas fa-arrows-alt-h"></i></button>
-                    <button class="page-tool-btn" title="Fit Page"><i class="fas fa-expand-arrows-alt"></i></button>
-                </div>
-                <div style="padding: 50px; color: #666; text-align: center; font-size: 18px;">
-                    No PDF loaded. Please upload a PDF file.
-                    <br><br>
-                    <button class="cyber-btn" onclick="window.location.href='index.html'">
-                        <i class="fas fa-upload"></i> Upload PDF
+            // Check file size (50MB limit)
+            if (file.size > 50 * 1024 * 1024) {
+                showAlert('File size exceeds 50MB limit', 'error');
+                return;
+            }
+
+            // Process the file
+            processPDFFile(file);
+        }
+
+        // Process PDF file
+        async function processPDFFile(file) {
+            try {
+                // Show loading state
+                document.getElementById('pdfPlaceholder').innerHTML = `
+                    <div style="text-align: center;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #bdc3c7;"></i>
+                        <h3>Loading PDF...</h3>
+                    </div>
+                `;
+
+                // Create URL for the file
+                const fileUrl = URL.createObjectURL(file);
+
+                // Load the PDF
+                await loadPDF(fileUrl);
+
+                // Hide placeholder and show PDF
+                document.getElementById('pdfPlaceholder').style.display = 'none';
+                document.getElementById('pdfCanvas').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                showAlert('Error loading PDF file', 'error');
+                document.getElementById('pdfPlaceholder').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
+                    <h3>Error Loading PDF</h3>
+                    <p>${error.message}</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-upload"></i> Try Again
                     </button>
-                </div>
-            `;
-        }
-    });
-
-    // Sidebar toggle functionality
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        const icon = sidebarToggle.querySelector('i');
-        if (sidebar.classList.contains('collapsed')) {
-            icon.classList.remove('fa-chevron-left');
-            icon.classList.add('fa-chevron-right');
-        } else {
-            icon.classList.remove('fa-chevron-right');
-            icon.classList.add('fa-chevron-left');
-        }
-    });
-
-    // Mobile sidebar toggle
-    function toggleMobileSidebar() {
-        sidebar.classList.toggle('mobile-expanded');
-    }
-
-    // Modal functions
-    function openFindReplaceModal() {
-        document.getElementById('findReplaceModal').classList.add('active');
-    }
-
-    function closeFindReplaceModal() {
-        document.getElementById('findReplaceModal').classList.remove('active');
-    }
-
-    function openHeaderModal() {
-        document.getElementById('headerModal').classList.add('active');
-    }
-
-    function closeHeaderModal() {
-        document.getElementById('headerModal').classList.remove('active');
-    }
-
-    function openFooterModal() {
-        document.getElementById('footerModal').classList.add('active');
-    }
-
-    function closeFooterModal() {
-        document.getElementById('footerModal').classList.remove('active');
-    }
-
-    // Tab switching
-    function switchTab(button, tabId) {
-        // Get all tabs in the current modal
-        const modal = button.closest('.modal-content');
-        const tabs = modal.querySelectorAll('.dialog-tab');
-        const tabContents = modal.querySelectorAll('.tab-content');
-        
-        // Remove active class from all tabs and contents
-        tabs.forEach(tab => tab.classList.remove('active'));
-        tabContents.forEach(content => content.style.display = 'none');
-        
-        // Add active class to clicked tab and show corresponding content
-        button.classList.add('active');
-        document.getElementById(tabId).style.display = 'block';
-    }
-
-    // Content type selection
-    function selectContentType(option, contentId) {
-        const container = option.closest('.content-type-selector');
-        const options = container.querySelectorAll('.type-option');
-        const contentContainer = option.closest('.tab-content');
-        const contentSections = contentContainer.querySelectorAll('.content-type-content');
-        
-        // Remove active class from all options
-        options.forEach(opt => opt.classList.remove('active'));
-        
-        // Hide all content sections
-        contentSections.forEach(section => section.style.display = 'none');
-        
-        // Add active class to clicked option and show corresponding content
-        option.classList.add('active');
-        document.getElementById(contentId).style.display = 'block';
-    }
-
-    // Checkbox toggle
-    function toggleCheckbox(checkbox) {
-        checkbox.classList.toggle('checked');
-        
-        // Special case for page number options in footer
-        if (checkbox.id.includes('PageNumber')) {
-            const options = document.getElementById('pageNumberOptions');
-            if (options) {
-                options.style.display = checkbox.classList.contains('checked') ? 'flex' : 'none';
+                `;
+                document.getElementById('pdfPlaceholder').style.display = 'block';
             }
         }
-    }
 
-    // Image upload preview
-    function setupImageUpload(uploadId, previewId) {
-        const upload = document.getElementById(uploadId);
-        const preview = document.getElementById(previewId);
-        
-        upload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                }
-                reader.readAsDataURL(file);
+        // Load PDF document
+        async function loadPDF(url) {
+            try {
+                // Load PDF document
+                const loadingTask = pdfjsLib.getDocument(url);
+                pdfDoc = await loadingTask.promise;
+                
+                // Update page count
+                pageCount = pdfDoc.numPages;
+                currentPage = 1;
+                
+                // Render first page
+                await renderPage(currentPage);
+                
+                // Update page display
+                updatePageDisplay();
+            } catch (error) {
+                throw error;
             }
-        });
-    }
-
-    // Initialize image uploads
-    setupImageUpload('leftHeaderImageUpload', 'leftHeaderImagePreview');
-    setupImageUpload('centerHeaderImageUpload', 'centerHeaderImagePreview');
-    setupImageUpload('rightHeaderImageUpload', 'rightHeaderImagePreview');
-    setupImageUpload('leftFooterImageUpload', 'leftFooterImagePreview');
-    setupImageUpload('centerFooterImageUpload', 'centerFooterImagePreview');
-    setupImageUpload('rightFooterImageUpload', 'rightFooterImagePreview');
-
-    // Enhanced Editor Functions
-    function addPage() { 
-        if (pdfDoc) {
-            alert('Adding a new page would be implemented here');
-            // In a real implementation, you would add a blank page to the PDF
-        } else {
-            alert('Please load a PDF first');
         }
-    }
 
-    function rotatePage() { 
-        if (pdfDoc) {
-            alert('Rotating page would be implemented here');
-            // In a real implementation, you would rotate the current page
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+//         async function renderPage(pageNum) {
+//     if (!pdfDoc) return;
+//     try {
+//         const page = await pdfDoc.getPage(pageNum);
+//         const canvas = document.getElementById('pdfCanvas');
+//         const context = canvas.getContext('2d');
 
-    function mergePDF() { 
-        alert('Merge PDF functionality would open a file selector');
-    }
+//         // Use device pixel ratio for crisp rendering
+//         const dpr = window.devicePixelRatio || 1;
+//         const viewport = page.getViewport({ scale: zoomLevel * dpr });
 
-    function splitPDF() { 
-        if (pdfDoc) {
-            alert('Split PDF would be implemented here');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+//         // Set canvas size in actual pixels
+//         canvas.width = viewport.width;
+//         canvas.height = viewport.height;
 
-    function addText() { 
-        if (pdfDoc) {
-            alert('Text tool activated. Click on the PDF to add text.');
-            // In a real implementation, you would set up a text addition mode
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+//         // Set canvas size in CSS pixels (for layout)
+//         canvas.style.width = (viewport.width / dpr) + "px";
+//         canvas.style.height = (viewport.height / dpr) + "px";
 
-    function activateHighlight() { 
-        if (pdfDoc) {
-            alert('Highlight tool activated. Select text to highlight.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+//         // Render PDF page
+//         await page.render({
+//             canvasContext: context,
+//             viewport: viewport
+//         }).promise;
 
-    function activateDraw() { 
-        if (pdfDoc) {
-            alert('Draw tool activated. Click and drag to draw on the PDF.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+//         document.getElementById('pdfPlaceholder').style.display = 'none';
+//         canvas.style.display = 'block';
+//     } catch (error) {
+//         console.error('Error rendering page:', error);
+//         throw error;
+//     }
+// }
+async function renderPage(pageNum) {
+    if (!pdfDoc) return;
+    try {
+        const page = await pdfDoc.getPage(pageNum);
+        const canvas = document.getElementById('pdfCanvas');
+        const context = canvas.getContext('2d');
 
-    function insertImage() { 
-        if (pdfDoc) {
-            alert('Image tool activated. Select an image file to insert.');
-        } else {
-            alert('Please load a PDF first');
-        }
-    }
+        // Get the original PDF page size in points (1/72 inch)
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        // Calculate scale for 1:1 display at 96dpi (typical screen), or use higher for more quality
+        const dpi = 150; // You can set this to 150, 200, or even 300 for super high quality
+        const scale = (dpi / 72) * zoomLevel * (window.devicePixelRatio || 1);
 
-    // File operations
-    function openFileManager() {
-        alert('File manager would open here');
-        // In a real implementation, you would show a file browser
-    }
+        const viewport = page.getViewport({ scale });
 
-    function savePDF() {
-        const pdfData = localStorage.getItem('currentPdf');
-        if (pdfData) {
-            // Create a download link
-            const link = document.createElement('a');
-            link.href = pdfData;
-            link.download = 'edited_document.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else {
-            alert('No PDF loaded to save');
-        }
-    }
+        // Set canvas size in actual pixels
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
-    // Update the save button event listener
-    document.querySelector('.cyber-btn-primary[onclick="savePDF()"]').addEventListener('click', savePDF);
+        // Set canvas size in CSS pixels (for layout)
+        canvas.style.width = (viewport.width / (window.devicePixelRatio || 1)) + "px";
+        canvas.style.height = (viewport.height / (window.devicePixelRatio || 1)) + "px";
 
-    // Add these functions to your script section:
+        // Render PDF page
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
 
-function addPageLeft() {
-    if (pdfDoc) {
-        // In a real implementation, you would insert a blank page before the current page
-        alert(`Adding a new page to the left of page ${currentPage}`);
-        // After adding the page, you would need to:
-        // 1. Update the PDF document
-        // 2. Increment totalPages
-        // 3. Increment currentPage (since we're inserting before)
-        // 4. Re-render the new page
-        // For this demo, we'll just show an alert
-    } else {
-        alert('Please load a PDF first');
+        document.getElementById('pdfPlaceholder').style.display = 'none';
+        canvas.style.display = 'block';
+    } catch (error) {
+        console.error('Error rendering page:', error);
+        throw error;
     }
 }
 
-function deletePage() {
-    if (pdfDoc) {
-        if (totalPages <= 1) {
-            alert("Can't delete the only page in the document");
-            return;
+
+
+        // Update page navigation display
+        function updatePageDisplay() {
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${pageCount}`;
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= pageCount;
         }
-        
-        if (confirm(`Are you sure you want to delete page ${currentPage}?`)) {
-            // In a real implementation, you would:
-            // 1. Remove the current page from the PDF document
-            // 2. Decrement totalPages
-            // 3. Adjust currentPage if needed
-            // 4. Re-render the appropriate page
+
+        // Navigation functions
+        async function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                await renderPage(currentPage);
+                updatePageDisplay();
+            }
+        }
+
+        async function nextPage() {
+            if (currentPage < pageCount) {
+                currentPage++;
+                await renderPage(currentPage);
+                updatePageDisplay();
+            }
+        }
+
+        // Zoom functions
+        async function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.25, 3.0);
+            await renderPage(currentPage);
+        }
+
+        async function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.25, 0.5);
+            await renderPage(currentPage);
+        }
+
+        async function fitToWidth() {
+            if (!pdfDoc) return;
             
-            // For this demo, we'll simulate the behavior:
-            totalPages--;
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            renderPage(currentPage);
-            alert(`Page ${currentPage} deleted (simulated)`);
+            const page = await pdfDoc.getPage(currentPage);
+            const canvas = document.getElementById('pdfCanvas');
+            const containerWidth = document.querySelector('.pdf-viewer').clientWidth - 40; // Account for padding
+            
+            zoomLevel = (containerWidth - 40) / page.getViewport({ scale: 1.0 }).width;
+            await renderPage(currentPage);
         }
-    } else {
-        alert('Please load a PDF first');
-    }
-}
-</script>
 
-
-    <!-- <script>
-
-
-       // Handle file upload from the upload button
-document.querySelectorAll('.input-div').forEach(div => {
-    div.addEventListener('click', function(e) {
-        if (e.target.classList.contains('input')) return;
-        this.querySelector('input').click();
-    });
-});
-
-// Handle file selection
-document.querySelectorAll('.input').forEach(input => {
-    input.addEventListener('change', function(e) {
-        const files = e.target.files;
-        if (files.length > 0) {
-            // Check if it's a PDF
-            if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                // Store the file in localStorage temporarily
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    localStorage.setItem('currentPdf', event.target.result);
-                    // Redirect to editor
-                    window.location.href = 'editor.html';
-                };
-                reader.readAsDataURL(files[0]);
-            } else {
-                alert('Please upload a PDF file');
-            }
+        // Tool activation functions
+        function activateTextTool() {
+            activeTool = 'text';
+            document.getElementById('textToolBtn').classList.add('active');
+            document.getElementById('highlightToolBtn').classList.remove('active');
+            document.getElementById('drawToolBtn').classList.remove('active');
         }
-    });
-});
 
-// Add drag and drop functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadAreas = document.querySelectorAll('.main-card');
+        function activateHighlightTool() {
+            activeTool = 'highlight';
+            document.getElementById('textToolBtn').classList.remove('active');
+            document.getElementById('highlightToolBtn').classList.add('active');
+            document.getElementById('drawToolBtn').classList.remove('active');
+        }
 
-    uploadAreas.forEach(area => {
-        area.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('border-purple-400');
-        });
-
-        area.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-purple-400');
-        });
-
-        area.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-purple-400');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                // Check if it's a PDF
-                if (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf')) {
-                    // Store the file in localStorage temporarily
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        localStorage.setItem('currentPdf', event.target.result);
-                        // Redirect to editor
-                        window.location.href = 'editor.html';
-                    };
-                    reader.readAsDataURL(files[0]);
-                } else {
-                    alert('Please upload a PDF file');
-                }
-            }
-        });
-    });
-});
-        // Sidebar toggle functionality
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const icon = sidebarToggle.querySelector('i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-chevron-left');
-                icon.classList.add('fa-chevron-right');
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-left');
-            }
-        });
-
-        // Mobile sidebar toggle
-        function toggleMobileSidebar() {
-            sidebar.classList.toggle('mobile-expanded');
+        function activateDrawTool() {
+            activeTool = 'draw';
+            document.getElementById('textToolBtn').classList.remove('active');
+            document.getElementById('highlightToolBtn').classList.remove('active');
+            document.getElementById('drawToolBtn').classList.add('active');
         }
 
         // Modal functions
@@ -2038,125 +1344,171 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('footerModal').classList.remove('active');
         }
 
-        // Tab switching
-        function switchTab(button, tabId) {
-            // Get all tabs in the current modal
-            const modal = button.closest('.modal-content');
-            const tabs = modal.querySelectorAll('.dialog-tab');
-            const tabContents = modal.querySelectorAll('.tab-content');
-            
-            // Remove active class from all tabs and contents
-            tabs.forEach(tab => tab.classList.remove('active'));
-            tabContents.forEach(content => content.style.display = 'none');
-            
-            // Add active class to clicked tab and show corresponding content
-            button.classList.add('active');
-            document.getElementById(tabId).style.display = 'block';
-        }
-
-        // Content type selection
-        function selectContentType(option, contentId) {
-            const container = option.closest('.content-type-selector');
-            const options = container.querySelectorAll('.type-option');
-            const contentContainer = option.closest('.tab-content');
-            const contentSections = contentContainer.querySelectorAll('.content-type-content');
-            
-            // Remove active class from all options
-            options.forEach(opt => opt.classList.remove('active'));
-            
-            // Hide all content sections
-            contentSections.forEach(section => section.style.display = 'none');
-            
-            // Add active class to clicked option and show corresponding content
-            option.classList.add('active');
-            document.getElementById(contentId).style.display = 'block';
-        }
-
         // Checkbox toggle
-        function toggleCheckbox(checkbox) {
-            checkbox.classList.toggle('checked');
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+        }
+
+        // Find and replace functions
+        function findNext() {
+            const searchText = document.getElementById('findText').value;
+            if (!searchText) {
+                showAlert('Please enter text to find', 'warning');
+                return;
+            }
             
-            // Special case for page number options in footer
-            if (checkbox.id.includes('PageNumber')) {
-                const options = document.getElementById('pageNumberOptions');
-                if (options) {
-                    options.style.display = checkbox.classList.contains('checked') ? 'flex' : 'none';
-                }
+            // Implement find functionality
+            showAlert(`Searching for: ${searchText}`, 'info');
+        }
+
+        function replaceText() {
+            const findText = document.getElementById('findText').value;
+            const replaceText = document.getElementById('replaceText').value;
+            
+            if (!findText) {
+                showAlert('Please enter text to find', 'warning');
+                return;
+            }
+            
+            // Implement replace functionality
+            showAlert(`Replacing "${findText}" with "${replaceText}"`, 'info');
+        }
+
+        function replaceAll() {
+            const findText = document.getElementById('findText').value;
+            const replaceText = document.getElementById('replaceText').value;
+            
+            if (!findText) {
+                showAlert('Please enter text to find', 'warning');
+                return;
+            }
+            
+            // Implement replace all functionality
+            showAlert(`Replacing all occurrences of "${findText}" with "${replaceText}"`, 'info');
+        }
+
+        // Header/Footer functions
+        function applyHeaderSettings() {
+            const text = document.getElementById('headerText').value;
+            const font = document.getElementById('headerFont').value;
+            const fontSize = document.getElementById('headerFontSize').value;
+            const color = document.getElementById('headerColor').value;
+            const alignment = document.getElementById('headerAlignment').value;
+            
+            // Implement header settings
+            showAlert('Header settings applied', 'success');
+            closeHeaderModal();
+        }
+
+        function applyFooterSettings() {
+            const text = document.getElementById('footerText').value;
+            const font = document.getElementById('footerFont').value;
+            const fontSize = document.getElementById('footerFontSize').value;
+            const color = document.getElementById('footerColor').value;
+            const alignment = document.getElementById('footerAlignment').value;
+            const includePageNumbers = document.getElementById('pageNumbersCheckbox').classList.contains('checked');
+            
+            // Implement footer settings
+            showAlert('Footer settings applied', 'success');
+            closeFooterModal();
+        }
+
+        // Page management functions
+        function addPage() {
+            showAlert('Add page functionality coming soon', 'info');
+        }
+
+        function deletePage() {
+            if (pageCount <= 1) {
+                showAlert('Cannot delete the only page', 'warning');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this page?')) {
+                showAlert('Page deleted', 'success');
+                // Implement delete page functionality
             }
         }
 
-        // Image upload preview
-        function setupImageUpload(uploadId, previewId) {
-            const upload = document.getElementById(uploadId);
-            const preview = document.getElementById(previewId);
-            
-            upload.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        preview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
+        function rotatePage() {
+            showAlert('Rotate page functionality coming soon', 'info');
         }
 
-        // Initialize image uploads
-        setupImageUpload('leftHeaderImageUpload', 'leftHeaderImagePreview');
-        setupImageUpload('centerHeaderImageUpload', 'centerHeaderImagePreview');
-        setupImageUpload('rightHeaderImageUpload', 'rightHeaderImagePreview');
-        setupImageUpload('leftFooterImageUpload', 'leftFooterImagePreview');
-        setupImageUpload('centerFooterImageUpload', 'centerFooterImagePreview');
-        setupImageUpload('rightFooterImageUpload', 'rightFooterImagePreview');
+        function mergePDF() {
+            showAlert('Merge PDF functionality coming soon', 'info');
+        }
 
-        // Placeholder functions for actions
-        function addPage() { alert('Add Page functionality would go here'); }
-        function rotatePage() { alert('Rotate Page functionality would go here'); }
-        function mergePDF() { alert('Merge PDF functionality would go here'); }
-        function splitPDF() { alert('Split PDF functionality would go here'); }
-        function ocrTool() { alert('OCR Scan functionality would go here'); }
-        function aiSummarizer() { alert('AI Summarizer functionality would go here'); }
-        function voiceNotes() { alert('Voice Notes functionality would go here'); }
-        function addText() { alert('Add Text functionality would go here'); }
-        function activateHighlight() { alert('Highlight functionality would go here'); }
-        function activateDraw() { alert('Draw functionality would go here'); }
-        function addStickyNote() { alert('Sticky Note functionality would go here'); }
-        function openSignatureModal() { alert('Signature functionality would go here'); }
-        function insertImage() { alert('Insert Image functionality would go here'); }
-        function insertQR() { alert('Insert QR Code functionality would go here'); }
-        function undo() { alert('Undo functionality would go here'); }
-        function redo() { alert('Redo functionality would go here'); }
-        function savePDF() { alert('Save PDF functionality would go here'); }
-        function findNext() { alert('Find Next functionality would go here'); }
-        function replaceText() { alert('Replace functionality would go here'); }
-        function replaceAll() { alert('Replace All functionality would go here'); }
-        function applyHeaderSettings() { alert('Apply Header Settings functionality would go here'); closeHeaderModal(); }
-        function applyFooterSettings() { alert('Apply Footer Settings functionality would go here'); closeFooterModal(); }
+        function splitPDF() {
+            showAlert('Split PDF functionality coming soon', 'info');
+        }
 
         // File operations
-function openFileManager() {
-    alert('File manager would open here');
-    // In a real implementation, you would show a file browser
-}
+        function savePDF() {
+            showAlert('Save PDF functionality coming soon', 'info');
+        }
 
-function savePDF() {
-    const pdfData = localStorage.getItem('currentPdf');
-    if (pdfData) {
-        // Create a download link
-        const link = document.createElement('a');
-        link.href = pdfData;
-        link.download = 'edited_document.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else {
-        alert('No PDF loaded to save');
-    }
-}
+        function downloadPDF() {
+            showAlert('Download PDF functionality coming soon', 'info');
+        }
 
-// Update the save button event listener
-document.querySelector('.cyber-btn-primary[onclick="savePDF()"]').addEventListener('click', savePDF);
-    </script> -->
+        // Undo/redo functions
+        function undo() {
+            showAlert('Undo functionality coming soon', 'info');
+        }
+
+        function redo() {
+            showAlert('Redo functionality coming soon', 'info');
+        }
+
+        // Helper function to show alerts
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.padding = '12px 24px';
+            alert.style.borderRadius = '4px';
+            alert.style.zIndex = '2000';
+            alert.style.animation = 'slideUp 0.3s ease-out';
+            
+            switch (type) {
+                case 'success':
+                    alert.style.backgroundColor = '#27ae60';
+                    alert.style.color = 'white';
+                    break;
+                case 'error':
+                    alert.style.backgroundColor = '#e74c3c';
+                    alert.style.color = 'white';
+                    break;
+                case 'warning':
+                    alert.style.backgroundColor = '#f39c12';
+                    alert.style.color = 'white';
+                    break;
+                default:
+                    alert.style.backgroundColor = '#3498db';
+                    alert.style.color = 'white';
+            }
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'fadeOut 0.5s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(alert);
+                }, 500);
+            }, 3000);
+        }
+
+        // Connect with index.html upload
+        // Check if we have a fileId in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileId = urlParams.get('fileId');
+        
+        if (fileId) {
+            loadPDF(`/api/pdf/${fileId}`);
+        }
+    </script>
 </body>
 </html>
