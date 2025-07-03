@@ -45,9 +45,9 @@
             background-color: var(--bg-light);
             color: var(--text-dark);
             line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            min-width: 100vw;
+            overflow-x: auto;
+            scroll-behavior: smooth;
         }
 
         /* Header Styles */
@@ -120,6 +120,9 @@
         .editor-container {
             display: flex;
             flex: 1;
+            min-width: 0;
+            width: 100vw;
+            height: 100%;
         }
 
         /* Sidebar Styles */
@@ -176,10 +179,18 @@
 
         /* Main Content Area */
         .main-content {
-            flex: 1;
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             background-color: var(--bg-light);
+            min-width: 0;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+            width: 100%;
+        }
+        .main-content.font-panel-open {
+            width: calc(100% - 350px);
         }
 
         /* Toolbar Styles */
@@ -233,14 +244,30 @@
         }
 
         /* PDF Viewer Area */
-        .pdf-viewer {
-            flex: 1;
+        .pdf-viewer-wrapper {
+            position: relative;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 1.5rem;
-            overflow: auto;
-            background-color: #f0f2f5;
+            justify-content: flex-start;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .pdf-viewer-wrapper.font-panel-open {
+            width: calc(100% - 350px);
+        }
+        .pdf-viewer {
+            overflow-x: auto;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            width: 100%;
+            min-width: 0;
+            cursor: grab;
+            user-select: none;
         }
 
         .pdf-page-container {
@@ -249,6 +276,8 @@
             margin-bottom: 1.5rem;
             position: relative;
             max-width: 100%;
+            min-width: fit-content;
+            width: auto;
         }
 
         .pdf-page-tools {
@@ -284,6 +313,7 @@
             max-width: 100%;
             height: auto;
             display: block;
+            max-width: none;
         }
 
         .pdf-placeholder {
@@ -615,6 +645,173 @@
         .fab i {
             font-size: 1.5rem;
         }
+
+        /* Font Panel Styles */
+        .font-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100vh;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            box-shadow: -2px 0 12px rgba(0,0,0,0.08);
+            z-index: 2100;
+            transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex;
+            flex-direction: column;
+        }
+        .font-panel.active {
+            right: 0;
+        }
+        .font-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.5rem 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .font-panel-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #888;
+        }
+        .font-panel-body {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            overflow-y: auto;
+        }
+        .font-group {
+            margin-bottom: 1.2rem;
+        }
+        .font-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+        .font-style-group, .font-script-group, .font-case-group, .font-align-group, .font-list-group {
+            display: flex;
+            gap: 10px;
+        }
+        .font-style-btn {
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 0.5rem 0.7rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .font-style-btn:hover, .font-style-btn.active {
+            background: var(--secondary-blue);
+            color: white;
+            border-color: var(--secondary-blue);
+        }
+        .font-panel select, .font-panel input[type="number"], .font-panel input[type="color"] {
+            width: 100%;
+            padding: 0.5rem 0.7rem;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+        /* Dark mode for font panel */
+        body.dark-mode .font-panel {
+            background: var(--primary-blue);
+            color: var(--text-light);
+        }
+        body.dark-mode .font-panel-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-light);
+        }
+        body.dark-mode .font-group label {
+            color: var(--text-light);
+        }
+        body.dark-mode .font-style-btn {
+            background: var(--primary-blue);
+            color: var(--text-light);
+            border-color: rgba(255,255,255,0.1);
+        }
+        body.dark-mode .font-style-btn:hover, body.dark-mode .font-style-btn.active {
+            background: var(--secondary-blue);
+            color: white;
+            border-color: var(--secondary-blue);
+        }
+        body.dark-mode .font-panel select, body.dark-mode .font-panel input[type="number"], body.dark-mode .font-panel input[type="color"] {
+            background: var(--dark-blue);
+            color: var(--text-light);
+            border-color: rgba(255,255,255,0.1);
+        }
+        @media (max-width: 900px) {
+            .font-panel {
+                width: 90vw;
+                right: -90vw;
+            }
+            .font-panel.active {
+                right: 0;
+            }
+            .main-content.font-panel-open {
+                margin-right: 90vw;
+            }
+        }
+
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        .switch input:checked + .slider {
+            background-color: var(--secondary-blue);
+        }
+        .switch input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        /* Dark mode for switch */
+        body.dark-mode .slider {
+            background-color: #444;
+        }
+        body.dark-mode .switch input:checked + .slider {
+            background-color: var(--secondary-blue);
+        }
+        body.dark-mode .slider:before {
+            background-color: #eee;
+        }
     </style>
 </head>
 <body>
@@ -795,6 +992,10 @@
                         <i class="fas fa-pencil-alt"></i>
                         <span>Draw</span>
                     </button>
+                    <button class="tool-btn" id="fontPanelBtn" onclick="toggleFontPanel()">
+                        <i class="fas fa-bold"></i>
+                        <span>Font</span>
+                    </button>
                 </div>
 
                 <div class="toolbar-group">
@@ -810,44 +1011,46 @@
             </div>
 
             <!-- PDF Viewer -->
-            <div class="pdf-viewer">
-                <div class="pdf-page-container">
-                    <div class="pdf-page-tools">
-                        <button class="page-tool-btn" title="Zoom In" onclick="zoomIn()">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <button class="page-tool-btn" title="Zoom Out" onclick="zoomOut()">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button class="page-tool-btn" title="Fit Width" onclick="fitToWidth()">
-                            <i class="fas fa-arrows-alt-h"></i>
-                        </button>
+            <div class="pdf-viewer-wrapper" id="pdfViewerWrapper">
+                <div class="pdf-viewer">
+                    <div class="pdf-page-container">
+                        <div class="pdf-page-tools">
+                            <button class="page-tool-btn" title="Zoom In" onclick="zoomIn()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="page-tool-btn" title="Zoom Out" onclick="zoomOut()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="page-tool-btn" title="Fit Width" onclick="fitToWidth()">
+                                <i class="fas fa-arrows-alt-h"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- PDF Display -->
+                        <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
+                        <img id="pdfImage" class="pdf-canvas" style="display: none;">
+                        
+                        <!-- Placeholder when no PDF is loaded -->
+                        <div id="pdfPlaceholder" class="pdf-placeholder">
+                            <i class="fas fa-file-pdf" style="font-size: 3rem; color: #bdc3c7; margin-bottom: 1rem;"></i>
+                            <h3>No PDF Loaded</h3>
+                            <p>Upload a PDF file to begin editing</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-upload"></i> Upload PDF
+                            </button>
+                        </div>
                     </div>
-                    
-                    <!-- PDF Display -->
-                    <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
-                    <img id="pdfImage" class="pdf-canvas" style="display: none;">
-                    
-                    <!-- Placeholder when no PDF is loaded -->
-                    <div id="pdfPlaceholder" class="pdf-placeholder">
-                        <i class="fas fa-file-pdf" style="font-size: 3rem; color: #bdc3c7; margin-bottom: 1rem;"></i>
-                        <h3>No PDF Loaded</h3>
-                        <p>Upload a PDF file to begin editing</p>
-                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('fileInput').click()">
-                            <i class="fas fa-upload"></i> Upload PDF
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Page Navigation -->
-                <div class="page-navigation">
-                    <button class="page-btn" id="prevPageBtn" onclick="previousPage()" disabled>
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
-                    <button class="page-btn" id="nextPageBtn" onclick="nextPage()" disabled>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+                    <!-- Page Navigation -->
+                    <div class="page-navigation">
+                        <button class="page-btn" id="prevPageBtn" onclick="previousPage()" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                        <button class="page-btn" id="nextPageBtn" onclick="nextPage()" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1065,6 +1268,71 @@
             </div>
         </div>
     </div>
+
+    <!-- Font Slide-Out Panel -->
+    <div class="font-panel" id="fontPanel">
+        <div class="font-panel-header">
+            <span>Font Options</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <label class="switch" title="Pin Font Panel">
+                    <input type="checkbox" id="pinFontPanelSwitch">
+                    <span class="slider"></span>
+                </label>
+                <button class="font-panel-close" onclick="toggleFontPanel()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="font-panel-body">
+            <div class="font-group">
+                <label>Font Family</label>
+                <select id="fontFamilySelect">
+                    <option>Arial</option>
+                    <option>Times New Roman</option>
+                    <option>Courier New</option>
+                    <option>Verdana</option>
+                    <option>Georgia</option>
+                    <option>Tahoma</option>
+                </select>
+            </div>
+            <div class="font-group">
+                <label>Font Size</label>
+                <input type="number" id="fontSizeInput" min="8" max="72" value="12">
+            </div>
+            <div class="font-group font-style-group">
+                <button class="font-style-btn" id="boldBtn" title="Bold"><i class="fas fa-bold"></i></button>
+                <button class="font-style-btn" id="italicBtn" title="Italic"><i class="fas fa-italic"></i></button>
+                <button class="font-style-btn" id="underlineBtn" title="Underline"><i class="fas fa-underline"></i></button>
+                <button class="font-style-btn" id="strikeBtn" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+            </div>
+            <div class="font-group">
+                <label>Font Color</label>
+                <input type="color" id="fontColorInput" value="#000000">
+            </div>
+            <div class="font-group">
+                <label>Highlight Color</label>
+                <input type="color" id="highlightColorInput" value="#ffff00">
+            </div>
+            <div class="font-group font-script-group">
+                <button class="font-style-btn" id="superscriptBtn" title="Superscript"><i class="fas fa-superscript"></i></button>
+                <button class="font-style-btn" id="subscriptBtn" title="Subscript"><i class="fas fa-subscript"></i></button>
+            </div>
+            <div class="font-group font-case-group">
+                <button class="font-style-btn" id="uppercaseBtn" title="UPPERCASE">A A</button>
+                <button class="font-style-btn" id="lowercaseBtn" title="lowercase">a 0a</button>
+                <button class="font-style-btn" id="capitalizeBtn" title="Capitalize">Aa</button>
+            </div>
+            <div class="font-group font-align-group">
+                <button class="font-style-btn" id="alignLeftBtn" title="Align Left"><i class="fas fa-align-left"></i></button>
+                <button class="font-style-btn" id="alignCenterBtn" title="Align Center"><i class="fas fa-align-center"></i></button>
+                <button class="font-style-btn" id="alignRightBtn" title="Align Right"><i class="fas fa-align-right"></i></button>
+                <button class="font-style-btn" id="alignJustifyBtn" title="Justify"><i class="fas fa-align-justify"></i></button>
+            </div>
+            <div class="font-group font-list-group">
+                <button class="font-style-btn" id="bulletListBtn" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                <button class="font-style-btn" id="numberListBtn" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let pdfDoc = null;
@@ -1325,6 +1593,7 @@
             document.getElementById('textToolBtn').classList.add('active');
             document.getElementById('highlightToolBtn').classList.remove('active');
             document.getElementById('drawToolBtn').classList.remove('active');
+            // Do NOT open the font panel here
         }
 
         function activateHighlightTool() {
@@ -1609,6 +1878,109 @@
         if (fileId) {
             loadPDF(`/api/pdf/${fileId}`);
         }
+
+        // Font Panel Logic
+        let isFontPanelPinned = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const pinSwitch = document.getElementById('pinFontPanelSwitch');
+            if (localStorage.getItem('fontPanelPinned') === 'true') {
+                pinSwitch.checked = true;
+                isFontPanelPinned = true;
+            }
+            pinSwitch.addEventListener('change', function() {
+                isFontPanelPinned = pinSwitch.checked;
+                localStorage.setItem('fontPanelPinned', isFontPanelPinned);
+            });
+        });
+
+        function toggleFontPanel(forceClose = false) {
+            const panel = document.getElementById('fontPanel');
+            const btn = document.getElementById('fontPanelBtn');
+            const wrapper = document.getElementById('pdfViewerWrapper');
+            const mainContent = document.querySelector('.main-content');
+            const isActive = panel.classList.contains('active');
+            if (isActive || forceClose) {
+                panel.classList.remove('active');
+                btn.classList.remove('active');
+                wrapper.classList.remove('font-panel-open');
+                mainContent.classList.remove('font-panel-open');
+                // Remove overlay if present (no longer needed)
+                removeFontPanelOverlay();
+            } else {
+                panel.classList.add('active');
+                btn.classList.add('active');
+                wrapper.classList.add('font-panel-open');
+                mainContent.classList.add('font-panel-open');
+                // Overlay removed: do not block canvas
+            }
+        }
+
+        function addFontPanelOverlay() {}
+        function removeFontPanelOverlay() {
+            const overlay = document.getElementById('fontPanelOverlay');
+            if (overlay) document.body.removeChild(overlay);
+        }
+        // Only close font panel when switching tools if not pinned and NOT the text tool
+        function closeFontPanelIfNotPinnedExceptText(e) {
+            if (!isFontPanelPinned && e.target.id !== 'fontPanelBtn' && e.target.id !== 'textToolBtn') {
+                const panel = document.getElementById('fontPanel');
+                if (panel.classList.contains('active')) toggleFontPanel();
+            }
+        }
+        document.getElementById('highlightToolBtn').addEventListener('click', closeFontPanelIfNotPinnedExceptText);
+        document.getElementById('drawToolBtn').addEventListener('click', closeFontPanelIfNotPinnedExceptText);
+        // Do NOT close font panel on text tool click
+
+        // Drag-to-scroll for PDF viewer (mouse and touch)
+        (function() {
+            const viewer = document.querySelector('.pdf-viewer');
+            let isDragging = false;
+            let startX, scrollLeft;
+
+            // Mouse events
+            viewer.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Only left mouse
+                isDragging = true;
+                viewer.classList.add('dragging');
+                startX = e.pageX - viewer.offsetLeft;
+                scrollLeft = viewer.scrollLeft;
+            });
+            viewer.addEventListener('mouseleave', () => {
+                isDragging = false;
+                viewer.classList.remove('dragging');
+            });
+            viewer.addEventListener('mouseup', () => {
+                isDragging = false;
+                viewer.classList.remove('dragging');
+            });
+            viewer.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - viewer.offsetLeft;
+                const walk = (x - startX) * -1; // Negative for natural direction
+                viewer.scrollLeft = scrollLeft + walk;
+            });
+
+            // Touch events
+            viewer.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                isDragging = true;
+                startX = e.touches[0].pageX - viewer.offsetLeft;
+                scrollLeft = viewer.scrollLeft;
+            }, {passive: true});
+            viewer.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+            viewer.addEventListener('touchcancel', () => {
+                isDragging = false;
+            });
+            viewer.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                const x = e.touches[0].pageX - viewer.offsetLeft;
+                const walk = (x - startX) * -1;
+                viewer.scrollLeft = scrollLeft + walk;
+            }, {passive: false});
+        })();
     </script>
 </body>
 </html>
