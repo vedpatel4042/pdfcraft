@@ -921,33 +921,62 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Header Text:</label>
-                    <input type="text" class="form-input" id="headerText" placeholder="Enter header text">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Font:</label>
-                    <select class="form-input" id="headerFont">
-                        <option>Arial</option>
-                        <option>Times New Roman</option>
-                        <option>Courier New</option>
-                        <option>Verdana</option>
+                    <label class="form-label">Type:</label>
+                    <select class="form-input" id="headerTypeSelect" onchange="toggleHeaderType()">
+                        <option value="text">Text</option>
+                        <option value="image">Image</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Font Size:</label>
-                    <input type="number" class="form-input" id="headerFontSize" min="8" max="72" value="12">
+                <div id="headerTextFields">
+                    <div class="form-group">
+                        <label class="form-label">Header Text:</label>
+                        <input type="text" class="form-input" id="headerText" placeholder="Enter header text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Font:</label>
+                        <select class="form-input" id="headerFont">
+                            <option>Arial</option>
+                            <option>Times New Roman</option>
+                            <option>Courier New</option>
+                            <option>Verdana</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Font Size:</label>
+                        <input type="number" class="form-input" id="headerFontSize" min="8" max="72" value="12">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Color:</label>
+                        <input type="color" class="form-input" id="headerColor" value="#000000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alignment:</label>
+                        <select class="form-input" id="headerAlignment">
+                            <option>Left</option>
+                            <option>Center</option>
+                            <option>Right</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Color:</label>
-                    <input type="color" class="form-input" id="headerColor" value="#000000">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Alignment:</label>
-                    <select class="form-input" id="headerAlignment">
-                        <option>Left</option>
-                        <option>Center</option>
-                        <option>Right</option>
-                    </select>
+                <div id="headerImageFields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Header Image:</label>
+                        <input type="file" class="form-input" id="headerImageInput" accept="image/*">
+                        <div id="headerImagePreview" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alignment:</label>
+                        <select class="form-input" id="headerImageAlignment">
+                            <option>Left</option>
+                            <option>Center</option>
+                            <option>Right</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Crop Image:</label>
+                        <button class="btn btn-secondary" type="button" onclick="cropHeaderImage()">Crop</button>
+                        <div id="headerCropArea" style="margin-top:8px;"></div>
+                    </div>
                 </div>
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="closeHeaderModal()">Cancel</button>
@@ -968,37 +997,66 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Footer Text:</label>
-                    <input type="text" class="form-input" id="footerText" placeholder="Enter footer text">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Font:</label>
-                    <select class="form-input" id="footerFont">
-                        <option>Arial</option>
-                        <option>Times New Roman</option>
-                        <option>Courier New</option>
-                        <option>Verdana</option>
+                    <label class="form-label">Type:</label>
+                    <select class="form-input" id="footerTypeSelect" onchange="toggleFooterType()">
+                        <option value="text">Text</option>
+                        <option value="image">Image</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Font Size:</label>
-                    <input type="number" class="form-input" id="footerFontSize" min="8" max="72" value="10">
+                <div id="footerTextFields">
+                    <div class="form-group">
+                        <label class="form-label">Footer Text:</label>
+                        <input type="text" class="form-input" id="footerText" placeholder="Enter footer text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Font:</label>
+                        <select class="form-input" id="footerFont">
+                            <option>Arial</option>
+                            <option>Times New Roman</option>
+                            <option>Courier New</option>
+                            <option>Verdana</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Font Size:</label>
+                        <input type="number" class="form-input" id="footerFontSize" min="8" max="72" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Color:</label>
+                        <input type="color" class="form-input" id="footerColor" value="#000000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alignment:</label>
+                        <select class="form-input" id="footerAlignment">
+                            <option>Left</option>
+                            <option>Center</option>
+                            <option>Right</option>
+                        </select>
+                    </div>
+                    <div class="form-checkbox">
+                        <div class="checkbox" id="pageNumbersCheckbox" onclick="toggleCheckbox(this)"></div>
+                        <label>Include page numbers</label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Color:</label>
-                    <input type="color" class="form-input" id="footerColor" value="#000000">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Alignment:</label>
-                    <select class="form-input" id="footerAlignment">
-                        <option>Left</option>
-                        <option>Center</option>
-                        <option>Right</option>
-                    </select>
-                </div>
-                <div class="form-checkbox">
-                    <div class="checkbox" id="pageNumbersCheckbox" onclick="toggleCheckbox(this)"></div>
-                    <label>Include page numbers</label>
+                <div id="footerImageFields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Footer Image:</label>
+                        <input type="file" class="form-input" id="footerImageInput" accept="image/*">
+                        <div id="footerImagePreview" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alignment:</label>
+                        <select class="form-input" id="footerImageAlignment">
+                            <option>Left</option>
+                            <option>Center</option>
+                            <option>Right</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Crop Image:</label>
+                        <button class="btn btn-secondary" type="button" onclick="cropFooterImage()">Crop</button>
+                        <div id="footerCropArea" style="margin-top:8px;"></div>
+                    </div>
                 </div>
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="closeFooterModal()">Cancel</button>
@@ -1034,8 +1092,6 @@
             }
         });
 
- 
-        
         // Initialize theme
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1180,76 +1236,42 @@
             }
         }
 
-//         async function renderPage(pageNum) {
-//     if (!pdfDoc) return;
-//     try {
-//         const page = await pdfDoc.getPage(pageNum);
-//         const canvas = document.getElementById('pdfCanvas');
-//         const context = canvas.getContext('2d');
+        async function renderPage(pageNum) {
+            if (!pdfDoc) return;
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const canvas = document.getElementById('pdfCanvas');
+                const context = canvas.getContext('2d');
 
-//         // Use device pixel ratio for crisp rendering
-//         const dpr = window.devicePixelRatio || 1;
-//         const viewport = page.getViewport({ scale: zoomLevel * dpr });
+                // Get the original PDF page size in points (1/72 inch)
+                const unscaledViewport = page.getViewport({ scale: 1 });
+                // Calculate scale for 1:1 display at 96dpi (typical screen), or use higher for more quality
+                const dpi = 150; // You can set this to 150, 200, or even 300 for super high quality
+                const scale = (dpi / 72) * zoomLevel * (window.devicePixelRatio || 1);
 
-//         // Set canvas size in actual pixels
-//         canvas.width = viewport.width;
-//         canvas.height = viewport.height;
+                const viewport = page.getViewport({ scale });
 
-//         // Set canvas size in CSS pixels (for layout)
-//         canvas.style.width = (viewport.width / dpr) + "px";
-//         canvas.style.height = (viewport.height / dpr) + "px";
+                // Set canvas size in actual pixels
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
 
-//         // Render PDF page
-//         await page.render({
-//             canvasContext: context,
-//             viewport: viewport
-//         }).promise;
+                // Set canvas size in CSS pixels (for layout)
+                canvas.style.width = (viewport.width / (window.devicePixelRatio || 1)) + "px";
+                canvas.style.height = (viewport.height / (window.devicePixelRatio || 1)) + "px";
 
-//         document.getElementById('pdfPlaceholder').style.display = 'none';
-//         canvas.style.display = 'block';
-//     } catch (error) {
-//         console.error('Error rendering page:', error);
-//         throw error;
-//     }
-// }
-async function renderPage(pageNum) {
-    if (!pdfDoc) return;
-    try {
-        const page = await pdfDoc.getPage(pageNum);
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
+                // Render PDF page
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
 
-        // Get the original PDF page size in points (1/72 inch)
-        const unscaledViewport = page.getViewport({ scale: 1 });
-        // Calculate scale for 1:1 display at 96dpi (typical screen), or use higher for more quality
-        const dpi = 150; // You can set this to 150, 200, or even 300 for super high quality
-        const scale = (dpi / 72) * zoomLevel * (window.devicePixelRatio || 1);
-
-        const viewport = page.getViewport({ scale });
-
-        // Set canvas size in actual pixels
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        // Set canvas size in CSS pixels (for layout)
-        canvas.style.width = (viewport.width / (window.devicePixelRatio || 1)) + "px";
-        canvas.style.height = (viewport.height / (window.devicePixelRatio || 1)) + "px";
-
-        // Render PDF page
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
-
-        document.getElementById('pdfPlaceholder').style.display = 'none';
-        canvas.style.display = 'block';
-    } catch (error) {
-        console.error('Error rendering page:', error);
-        throw error;
-    }
-}
-
-
+                document.getElementById('pdfPlaceholder').style.display = 'none';
+                canvas.style.display = 'block';
+            } catch (error) {
+                console.error('Error rendering page:', error);
+                throw error;
+            }
+        }
 
         // Update page navigation display
         function updatePageDisplay() {
@@ -1389,28 +1411,106 @@ async function renderPage(pageNum) {
 
         // Header/Footer functions
         function applyHeaderSettings() {
-            const text = document.getElementById('headerText').value;
-            const font = document.getElementById('headerFont').value;
-            const fontSize = document.getElementById('headerFontSize').value;
-            const color = document.getElementById('headerColor').value;
-            const alignment = document.getElementById('headerAlignment').value;
-            
-            // Implement header settings
-            showAlert('Header settings applied', 'success');
-            closeHeaderModal();
+            const type = document.getElementById('headerTypeSelect').value;
+            if (type === 'text') {
+                const text = document.getElementById('headerText').value;
+                const font = document.getElementById('headerFont').value;
+                const fontSize = document.getElementById('headerFontSize').value;
+                const color = document.getElementById('headerColor').value;
+                const alignment = document.getElementById('headerAlignment').value;
+                showAlert('Header text settings applied', 'success');
+                closeHeaderModal();
+            } else {
+                const imageInput = document.getElementById('headerImageInput');
+                const alignment = document.getElementById('headerImageAlignment').value;
+                let imageData = null;
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageData = e.target.result;
+                        // You can use imageData (base64) for further processing
+                        showAlert('Header image settings applied', 'success');
+                        closeHeaderModal();
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                    return;
+                }
+                showAlert('Please select an image for header', 'warning');
+            }
         }
 
         function applyFooterSettings() {
-            const text = document.getElementById('footerText').value;
-            const font = document.getElementById('footerFont').value;
-            const fontSize = document.getElementById('footerFontSize').value;
-            const color = document.getElementById('footerColor').value;
-            const alignment = document.getElementById('footerAlignment').value;
-            const includePageNumbers = document.getElementById('pageNumbersCheckbox').classList.contains('checked');
-            
-            // Implement footer settings
-            showAlert('Footer settings applied', 'success');
-            closeFooterModal();
+            const type = document.getElementById('footerTypeSelect').value;
+            if (type === 'text') {
+                const text = document.getElementById('footerText').value;
+                const font = document.getElementById('footerFont').value;
+                const fontSize = document.getElementById('footerFontSize').value;
+                const color = document.getElementById('footerColor').value;
+                const alignment = document.getElementById('footerAlignment').value;
+                const includePageNumbers = document.getElementById('pageNumbersCheckbox').classList.contains('checked');
+                showAlert('Footer text settings applied', 'success');
+                closeFooterModal();
+            } else {
+                const imageInput = document.getElementById('footerImageInput');
+                const alignment = document.getElementById('footerImageAlignment').value;
+                let imageData = null;
+                if (imageInput.files && imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageData = e.target.result;
+                        // You can use imageData (base64) for further processing
+                        showAlert('Footer image settings applied', 'success');
+                        closeFooterModal();
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                    return;
+                }
+                showAlert('Please select an image for footer', 'warning');
+            }
+        }
+
+        // Toggle header/footer type
+        function toggleHeaderType() {
+            const type = document.getElementById('headerTypeSelect').value;
+            document.getElementById('headerTextFields').style.display = (type === 'text') ? '' : 'none';
+            document.getElementById('headerImageFields').style.display = (type === 'image') ? '' : 'none';
+        }
+        function toggleFooterType() {
+            const type = document.getElementById('footerTypeSelect').value;
+            document.getElementById('footerTextFields').style.display = (type === 'text') ? '' : 'none';
+            document.getElementById('footerImageFields').style.display = (type === 'image') ? '' : 'none';
+        }
+
+        // Image preview logic
+        document.getElementById('headerImageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('headerImagePreview');
+            preview.innerHTML = '';
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100px;max-height:60px;">`;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        document.getElementById('footerImageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('footerImagePreview');
+            preview.innerHTML = '';
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100px;max-height:60px;">`;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Placeholder crop functions
+        function cropHeaderImage() {
+            showAlert('Image cropping coming soon!', 'info');
+        }
+        function cropFooterImage() {
+            showAlert('Image cropping coming soon!', 'info');
         }
 
         // Page management functions
